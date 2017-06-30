@@ -1,0 +1,8 @@
+Date：
+	1.服务器的传输，用的是sql.Date，除此之外所有的Date用的都是utils中的
+	2.两者之间的转换
+		SimpleDateFormat 提供了
+			a)format  util.Date ---》String 
+			b)parse   String ---->util.Date
+		util.Date ----> sql.Date
+			util.Date ---> String  ---> valuesOf(sql)(将String转换成sql.Date)

@@ -1,0 +1,27 @@
+java 问题
+1.代理设计理念的参数的意义  
+2.接口多态的意义
+3.本地数据可以不实现序列化，网络之间必须序列化
+4.为什么传输数据不能用sql的Date
+================================================================
+jsp
+1.实现动态加载导航栏，想一下后台如何去增删改查数据
+2.biz包的职能
+
+==================================================================
+Date d = new Date() ;
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd") ;
+
+        String strDate = sdf.format(d) ;
+
+        System.out.println(strDate);
+        
+
+        /*String date = "2016-10-15" ;
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd") ;
+
+        Date d = sdf.parse(date) ;
+
+        System.out.println(d);*/

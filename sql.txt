@@ -1,0 +1,52 @@
+查询住址为“山东”的学生姓名、电话、住址
+select  StudentName,Phone,Address  from  student  where  Address="山东"
+查询名称中含有“数据库”字样科目信息
+select  *  from  Subject  where  SubjectName  LIKE  "%数据库%"
+查询电话中以“1387”开头的学生信息
+select  *  from  student  where  Phone  like  "1387%"
+查询姓姜的，单名的学生信息
+select  *  from  Student  where  StudentName  like  "姜_"
+查询考试成绩信息
+SELECT  *  from  Result 
+查询某出生日期之间学生信息 
+select  *  from  Student  where  BornDate  between  "1996-1-1"  and  "1997-1-1"
+
+查询学生总人数
+select  count(*)  from  Student
+查询s1年级的总学时
+select  sum(ClassHour)  from  Subject,Grade  where  Subject.GradeId=Grade.GradeId  and  GradeName="s1"
+年级考试最高分及最低分
+select  max(StudentResult),min(StudentResult),GradeId  from  Result,Student  where  result.StudentNo=Student.StuudentNo  GROUP BY  GradeId
+年级考试平均分
+select  avg(StudentResult),GradeId  from  Result,Student  where  result.StudentNo=Student.StuudentNo  GROUP BY  GradeId
+年级中各学科平均分
+SELECT grade.GradeId,SubjectName,AVG(result.StudentResult) FROM result,`subject`,grade
+
+WHERE result.SubjectId=`subject`.SubjectId
+
+and grade.GradeId=`subject`.GradeId
+
+GROUP BY grade.GradeId,SubjectName
+
+二年级所有学生人数及总分
+Select  count(*),sum(StudentResult)  from  Result,Student  where  result.StudentNo=Student.StudentNo  GROUP BY  GradeId  HAVING  GradeId="222"
+
+查询每个年级的总学时数，并按照升序排列
+select  sum(ClassHour),GradeId  from  Subject  GROUP BY  GradeId  ORDER BY sum(ClassHour) ASC
+查询每个参加考试的学员的平均分
+select  avg(StudentResult),StudentNo  from  Result  GROUP BY  StudentNo
+查询每门课程的平均分，并按照降序排列
+select  avg(StudentResult),SubjectName  from  Result,Subject  where  Result.SubjectId=Subject.SubjectId  GROUP BY  SubjectName  ORDER BY  avg(StudentResult)  DESC
+查询每个学生参加的所有考试的总分，并按照降序排列
+select sum(StudentResult),StudentName from result,student where result.StudentNo=student.StudentNo  GROUP BY  StudentName  ORDER BY  sum(StudentResult)  DESC
+
+查询所有科目的参加考试信息并进行显示 
+select subject.SubjectId,SubjectName,ExamDate from subject,result where subject.SubjectId=result.SubjectId  GROUP BY  SubjectName
+查询从未考试的科目信息
+select * from subject where subjectId not in (select subjectId from result)
+
+查询所有年级对应的学生信息 
+select * from student right outer join grade on (student.GradeId = grade.GradeId)
+
+
+
