@@ -1,0 +1,22 @@
+获得radio的状态：
+var val=$('input:radio[name="sex"]:checked').val();
+intellij 快速建多个
+nav>ul>(li>a[href="#"])*8
+
+========================
+jqueryeasyUI命名方法的学习
+	.pagination .pagination-num {
+	  border-color: #ddd;
+	}
+	
+	.pagination span {//不管用
+	  font-size: 12px;
+	}
+	--------> 应该是 span.pagination
+	
+
+一行图锁定一个图的获取
+.pagination-load {
+  background: url('images/pagination_icons.png') no-repeat -64px center;
+}
+==

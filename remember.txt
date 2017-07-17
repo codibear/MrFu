@@ -1,0 +1,499 @@
+ 
+ 
+ 哪有问题，先找这个有问题的组件
+ 一对多的空指针异常
+ display: inline-block
+ 
+ ##########  Cookie  ##########
+ 
+ 在网页上获得值后传递给action
+	String para = request.getParameter("para");
+	Cookie userCookie = new Cookie("username",para);
+	userCookie.setAge();//设时长
+	
+	
+ 
+ 
+ #######普通的增上改查###########
+ 
+ 注意点	1.重定向的应用---防止客户因为刷新重新执行当前action操作
+		2.actiong中重新调用action操作
+		
+	href="Action?typeId=${typeId}";
+	
+	查：
+		查询action
+	
+	删：
+	
+	改：
+		执行查操作 --- 把所有的东西放在input中，其中关键信息input type="hidden"(跳到新的action中)
+		输入后就可以update(内部调用查找action，更新到界面中)		
+		-------------------------------------------------
+		
+#########  JS ajax  ##########
+
+
+注意点：	
+	1.写入body中
+	2.对于getRequestDispatcher()，显示数据的掩盖应该用 重定向 
+	Action层传出数据
+		1）基本数据类型（包括String）
+			PrintWriter pw=	 response.getWriter();
+			pw.write("success");
+			pw.flush();
+			pw.close();
+		2）对象数据类型/集合用json数据传  ---- fastJson
+			String json = JSON.toJSONString(list,true);
+			pw.write(json);
+			pw.flush();
+			pw.close();
+			把json通过上述方式传过去
+	
+	获取数据  ---- 如果直接获取可以不写click就行
+	$(function(){
+		$(#"bt").click(function(){
+			$.get【getJson】("/根路径/Action",{sid:sid},function(data){
+				//添加标签
+				$.each(data,function(k,v){
+					$("#tb").append("<tr><td>"+"data"+</td></tr>");
+				})
+			})
+			
+			//在界面中读取另一个界面
+			$("#dl").load("/根目录/Action")//Action跳到的界面
+		})
+	})
+	
+	--------------------------------
+	接收json数据
+			<table>
+			<tr>
+				<td>学号</td>
+				<td>名字</td>
+				<td>操作</td>
+			</tr>
+		<c:forEach items="${list}" var="s">
+			<tr>
+				<td>${s.studentNum}</td>
+				<td>${s.name}</td>
+				<td><a href="/CRUDTes/DeleteAction?sid=${s.sid}">删除| <a href="/CRUDTes/GetOneAction?sid=${s.sid}">修改</a></a></td>
+			</tr>
+
+		</c:forEach>	
+			
+		</table>
+		
+	--------------------------------
+	
+	表单的序列化获取数据
+	
+	<script type="text/javascript" src="/CRUDTes/js/jquery.min.js"></script>
+
+<script>
+$(function(){
+	$("#sbt").click(function(){
+		var formVal=$("#myForm").serializeArray();
+		//alert(formVal);
+		$.post("/CRUDTes/UpdateAjaxAction",formVal,function(data){
+			alert(data);
+			location.href="/CRUDTes/index.jsp";
+		});
+		
+	});
+	
+	
+	
+});
+
+
+
+</script>
+
+</head>
+<body>
+
+<form id="myForm"  method="post">
+	<input type="hidden"  name="sid" value="${student.sid}"><br>
+	学号:<input type="text"  name="studentNum" value="${student.studentNum}"><br>
+	名字:<input type="text" name="name" value="${student.name}"><br>
+	
+</form>
+
+<button type="button" id="sbt">保存</button>
+
+
+
+</body>
+	-----------------------------------------------
+	序列化表单
+<script>
+$(function(){
+	$("#sbt").click(function(){
+		var formVal=$("#myForm").serializeArray();
+		//alert(formVal);
+		$.post("/CRUDTes/UpdateAjaxAction",formVal,function(data){
+			alert(data);
+			location.href="/CRUDTes/index.jsp";
+		});
+		
+	});
+});
+
+</script>
+
+</head>
+<body>
+<form id="myForm"  method="post">
+	<input type="hidden"  name="sid" value="${student.sid}"><br>
+	学号:<input type="text"  name="studentNum" value="${student.studentNum}"><br>
+	名字:<input type="text" name="name" value="${student.name}"><br>
+</form>
+<button type="button" id="sbt">保存</button>
+</body>
+	-----------------------------------------------
+	
+ 
+ =================================================
+ 
+父类子类的分布特点：（自己总结）
+数据连接池  ---- 代码的重用     ##########动态数组的应用##############
+	public abstract class BaseDao {
+
+    /**
+     * 增删改几个方法都属于是更新状态
+     */
+    protected void update(String sql,Object ... params) throws SQLException {
+        Connection connection = DataSource.getConnection() ;
+
+        PreparedStatement ps = connection.prepareStatement(sql) ;
+
+        for(int i = 0 ; i < params.length ; i++) {
+            ps.setObject(i+1,params[i]);
+        }
+
+        ps.executeUpdate() ;
+
+        DataSource.close(connection);
+    }
+
+}
+	
+
+
+
+		-------------------------------------
+	//疑问：这个是不是用resp接数据？  不用
+	/*resp.sendRedirect("index.html");*/
+	
+	req.getRequestDispatcher("index.jsp").forward(req,resp);
+JSP基本语法
+	默认情况下，是需要使用者通过范围设置取值。如果没有设置范围，它就会按照以下方式进行各范围的查找
+		pageContext  >>>  request   >>>   session   >>>   application
+		如果都没有找到，则会返回null
+
+
+	If
+				<c:if test = “”></c:if>
+			Choose
+				<c:choose>
+					<c:when test=””>
+					</c:when>
+					<c:otherwise>
+					<c:otherwise>
+				<c:choose>
+			Foreach
+				<c:Foreach var=”迭代变量” items=”${集合}” begin=”起始值” end=”结束值” status=”st”>
+					${st.index}
+				</c:Foreach>
+
+JSP的内置对象以及MVC设计模式(Servlet)
+	<input type = "hidden" name="url" value="####">
+EasyUI基本使用
+ 
+ ===========================
+ 
+ 一对多多对一实体类建立
+ 实体类的创建
+	1.多对一之：多 字段
+		public class Student {
+
+		private String stu_no;
+
+		private String stu_name;
+
+		/**
+		 * 多对一
+		 */
+		private Grade grade ;
+		
+	2.多对一之： 一 字段
+		public class Grade {
+		private Integer gradeId ;
+		private String gradeName ;
+		//此处必须初始  ----  用set可以保证不重复  
+		private Set<Student> students = new HashSet<>();
+		
+		    -=-=-=-=-=-==-=方便添加类型的方法
+		public void addStudent(Student student) {
+			this.students.add(student) ;
+		}
+		
+
+    /**
+     * 采用集合模拟多的一方
+     * List  1 : 能够装载很多对象。
+     * Set :
+     * Map 2 : 左边存储学生的编号，右侧存储学生对象
+     */
+
+ 
+	------ forEach的合理利用
+ List<Type> types = typeDao.findAll() ;
+            for(Type t : types) {
+                System.out.println(">>>>" + t.getTypeName());
+                for(Brand brand : t.getBrands()) {
+                    System.out.println(brand.getBrand_Name());
+                }
+ =======================================
+ DButils 和 QueryRun
+ 
+	DButils:  表单中获得信息的快速方式
+	
+	public class GetWrapEntity<T> {
+		public T getEntity(T t, HttpServletRequest req) throws InvocationTargetException, IllegalAccessException {
+			//建立集合
+			HashMap map = new HashMap();
+			//获得参数名称
+			Enumeration<String> names = req.getParameterNames();
+			//是否有更多的元素
+			while(names.hasMoreElements()){
+				//取出多个元素
+				String name = names.nextElement();
+				//把元素放到map中
+				map.put(name,req.getParameterValues(name));
+			}
+			//把map中的值，拷贝到对象中
+			BeanUtils.populate(t,map);
+			return t;
+		}
+	}
+	
+	QueryRun:数据库的快速查询
+	
+	 public void testA() throws SQLException {
+        QueryRunner qr = new QueryRunner(DataSourceUtil.getDataSource());
+        //单挑数据
+
+        Goods goods = qr.query("select * from goods where goodsId = ?",new BeanHandler<Goods>(Goods.class),1);
+        System.out.println(goods.getGoodsId());
+        //多条数据
+       /* List<Goods> goods= qr.query("select * from goods",new BeanListHandler<Goods>(Goods.class));
+        for(Goods good:goods){
+            System.out.println(good.getGoodsName());
+        }*/
+       //增加数据
+        //qr.update("insert into goods (goodsid,goodsname,typeid)values(?,?,?)",7,"写",2);
+    }
+	 
+ 
+ 
+ ==============================================
+ 地致相同，内容可能不同？
+加载到一样的新的界面，界面会改变格式
+requestScope.types
+显示的内容
+[Type{typeId=1, typeName='手机', typeDesc='啊手机'}, Type{typeId=2, 
+typeName='手表', typeDesc='啊手表'}, Type{typeId=3, typeName='手套', 
+typeDesc='啊手套'}, Type{typeId=4, typeName='手欠', typeDesc='啊手欠'}, 
+Type{typeId=6, typeName='xxx', typeDesc='xxxx4'}]
+------
+<c:forEach items="${types}" var="type">
+          <tr>
+            <td>${type.typeId}</td>
+            <td>${type.typeName}</td>
+            <td>${type.typeDesc}</td>
+          </tr>
+        </c:forEach>
+-------
+<c:forEach begin="1" end="10" step="1" varStatus="status">
+        hello + ${status.index}<br/>
+      </c:forEach>
+	  -------
+所显示内容
+hello + 1
+hello + 2
+hello + 3
+hello + 4
+hello + 5
+hello + 6
+hello + 7
+hello + 8
+hello + 9
+hello + 10
+---------------
+<c:choose>
+	  <c:when test="${userinfo!=null}">
+		<span style="color: #B0B0B0">欢迎您:${userinfo.user_name}<span>
+	  </c:when>
+	  <c:otherwise>
+	  <a class="gray"href="${pageContext.request.contextPath}/login.jsp">登录</a>
+	  </c:otherwise>
+ </c:choose>
+ 
+ ---------------
+ <c:if test="${types != null}">
+      <c:forEach var="type" items="${types}">
+        ${type.typeName}
+      </c:forEach>
+ </c:if>
+ -------------
+ 插入图片
+ GoodsInfo
+ String imgPath;
+ <img src="/${goodsIfo.imgPath}"/>
+ -------------
+ select * from goodsinfo where ?
+ <td><a href="GoodsInfoAction?typeId=${type.typeId}">${type.typeName}</a></td>
+ ------------
+ 多个子句返回查询
+ 
+ 
+ 
+ 
+ 
+ ==================================================
+ src
+	最底层包
+	web
+		action   	----	initActon
+		filter		----	
+							EnconderFilter
+							SessionFilter
+							TestFilter
+ 
+ 
+ include filter erro
+	
+ 
+ include :
+	指令包含
+	
+	1.<%@ include file="2.jsp">  --- 缺点 1.每个include的变量都算是全局变量，很容易起冲突
+										  2.写的位置也不是很好看
+										  3.先拼合后编译
+	jsp指令包含
+	
+	2.<jsp:include page="2.jsp">  ---每一个都是全局变量 先编译后拼合
+	以前项目的优化
+	req.getRequestDispatcher("/index.jsp“).include(req,resp);
+	每个模块的servlet都写一个注释
+	
+	3. <jsp:forward page="${pageContext.request.contextPath}/InitAction" />
+	
+	Filter
+	过滤器拦截的是请求，动态代理拦截的是方法
+		public class EncoderFilter implements Filter {
+
+		private String encoding  ;
+
+		@Override
+		public void init(FilterConfig filterConfig) throws ServletException {
+			encoding = filterConfig.getInitParameter("Encoding") ;
+		}
+
+		@Override
+		public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+			System.out.println("调用了编码过滤器");
+			HttpServletRequest request = (HttpServletRequest) servletRequest;	//这里一定要转换
+			HttpServletResponse response = (HttpServletResponse) servletResponse;
+			request.setCharacterEncoding(encoding);
+			response.setCharacterEncoding(encoding);
+			filterChain.doFilter(servletRequest,servletResponse);
+		}
+
+		@Override
+		public void destroy() {
+			System.out.println("销毁filter...");
+		}
+	}
+	
+	--------------------------
+	
+		public class SessionFilter implements Filter {
+		@Override
+		public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+			HttpServletRequest request = (HttpServletRequest) servletRequest;
+			HttpServletResponse response = (HttpServletResponse) servletResponse;
+
+			HttpSession session = request.getSession() ;
+
+			if(session.getAttribute("userInfo") != null) {
+				request.getRequestDispatcher("/login.jsp").forward(request,response);
+			}
+		}
+	}
+	
+	----------------------------
+	 filterChain.doFilter(servletRequest,servletResponse);   调用链
+	----------------------------
+	public class TestFilter implements Filter {
+
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+
+    }
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        System.out.println("这是test的filter...");
+        filterChain.doFilter(servletRequest,servletResponse);
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+}
+	===============================  配置web。xml  filter----servlet----welcome
+	<!--filter放在最上面-->   
+    <filter>
+        <filter-name>EncoderFilter</filter-name>
+        <filter-class>com.chinasofti.shop.web.filter.EncoderFilter</filter-class>
+        <!--将初始化的参数放置在全类名后面-->
+        <init-param>
+            <param-name>Encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+    </filter>
+    <filter>
+        <filter-name>TestFilter</filter-name>
+        <filter-class>com.chinasofti.shop.web.filter.TestFilter</filter-class>
+    </filter>
+
+
+    <filter-mapping>
+        <filter-name>TestFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>EncoderFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+	
+    <!--           以下是商品模块             -->
+
+    <welcome-file-list>
+        <welcome-file>/new.jsp</welcome-file>
+    </welcome-file-list>
+
+    <error-page>
+        <error-code>404</error-code>
+        <location>/404.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/500.jsp</location>
+    </error-page>

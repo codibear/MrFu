@@ -6,3 +6,15 @@ Date：
 			b)parse   String ---->util.Date
 		util.Date ----> sql.Date
 			util.Date ---> String  ---> valuesOf(sql)(将String转换成sql.Date)
+			
+Json:
+	对象{}    数组[]
+	
+	json常用的数据格式[{},{},{}]
+	var person = {
+		id:"123456",
+		name:"zhangzhixiong",
+		sayHello:function(){
+			alter("hello a");
+		}
+	};
