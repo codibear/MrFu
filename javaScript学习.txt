@@ -1,0 +1,102 @@
+弱类型语言 所以不需要指明类型
+1.冲突符号的对策
+	var god = "it'\s true0";
+	alert(god);
+2.var不区数据类型可以接受各种类型
+	var a = 33;var a = "aa"; var a = ture; var temperature = 20.33
+3.数组  --- 数组下标可以是字符  var lesson["name"] = "jhon"
+	1) var a = Array(4);  //可以不符4
+		a[0]="a";
+	2) var a = Array("a","b");
+	3) var a =["a","b","c"]
+	可以把各种类型的数据混合放在一个数组中
+	4）数组中可以存储数组
+		var a = ["a","b"];
+		var b =[];
+		b[0] = a;
+		
+		取值
+		b[0][1]
+		
+4.关联数组   --- 自动追加
+
+5.对象   ---- 通过名称来存取 拓展性好还可以存取对象
+	var len = Object();
+	len.name = "jhon";
+	len.year = 22;
+	2.
+	var len ={name:"jhon",year:22};
+	3. 对象-数组-值  （一层套一层）
+	var b = Array();
+	b[0].name;
+	
+6.操作   和java差不多可以字符窜拼接  字符串+数字=字符串
+7.比较操作符  “”和false相等“”==false返回ture
+
+				函数
+------------------------------------------------
+优势：可以把一个函数获得的值当作参数来使用（函数调用函数）
+格式：
+function method(参数){
+	var a = Array("b","a");
+	for(var count=0;count<a.length;count++){
+		alert(z.[count]);
+	}
+}
+
+作用域：（全局/局部）function里和外的区别
+%%%%%%%%%%与java不同的是局部变量调用全局变量会改变全局变量的值%%%%%%%%%%%%
+----------前提是全局变量有var声明，在局部调用的时候没有var声明才会出现上面的情况
+
+对象 =====内置对象======数组对象
+
+
+
+
+
+				CSS
+----------------------------------------------------
+继承性  上一层有的属性下一层灰自动应用
+#id li 这样可以用
+getElementById("a")
+typeof判断类型
+typeof getElementById("a")  --- panduan
+getElementByTagName("li"//【i】)//.length   返回的是对象素组
+getElementsByClassName			返回的是对象素组  括号中可以有多个名字，他只按内容取交集，无顺序
+var item = getElementByTagName("li")  ------当成对象数组，直接用
+
+获得元素节点的全部节点
+var a = document.getElementById("li1");
+var item = a.getElementByTagName("*").length  --------通配符
+
+
+p42  ----自己写方法
+
+getAttribute("属性名")  ---获得属性，但是不能用document，职能在getByID/class。。。后面用
+setAttribute("attr","value");
+工厂模式：表里不一  静态的不变动态的自动去更新，看源码的时候一开始静态的状态
+
+小结：介绍里其他的一些属性   p45
+
+					js图片库
+------------------------------------------
+
+开始思路：用超级链接给路径点击就会获取 
+2.优化方法：(DOM)解决方式
+	function() showPic(whichpic){
+		var source =whichpic.getAttribute("href");//获得属性(路径)
+		var placerholder = document.getElementById("placerholder");//获取对象
+		placerholder.setAttribute("src",source);
+	}
+	(非DOM解决方案)
+	改变某个属性的值的快捷方法：
+	element.value = "aaa";
+	element.setAttribute("value","aaa");
+	
+	所以：
+--->placerholder.src = source;
+
+事件处理函数：onclick  格式：event = "method(s)"
+	onclick = "showPic(this);return false"  //在a标签中调用方法但不跳转
+	
+	

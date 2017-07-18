@@ -1,0 +1,167 @@
+intellij  -----  struts2
+
+蚂蚁算法  python 线性代数
+
+1.配置（low方法）
+	导入案例的lib包，	
+	在web.xml中配置filter（根据案例）
+		<filter>
+			<filter-name>struts2</filter-name>
+			<filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
+		</filter>
+		<filter-mapping>
+			<filter-name>struts2</filter-name>
+			<url-pattern>/*</url-pattern>
+		</filter-mapping>
+=====================================================================	
+	struts.xml中配置相关内容（删除相关内容）
+	
+		<?xml version="1.0" encoding="UTF-8" ?>
+		<!DOCTYPE struts PUBLIC
+			"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+			"http://struts.apache.org/dtds/struts-2.3.dtd">
+
+		<struts>
+			<!--将不同的模块放置在不同的　包之中-->
+			<package name="userinfopkg" namespace="/userinfo" extends="struts-default">
+				<!--http://localhost:8080/struts/userinfo/loginAction-->
+				<action name="listAction" class="com.chinasofti.action.UserInfoAction" method="list">
+					<result name="list">/list.jsp</result>
+				</action>
+				<action name="loginAction" class="com.chinasofti.action.UserInfoAction" method="login">
+					<!--
+						重定向or后端跳转？
+						默认的情况下采用后端跳转方式执行
+					-->
+					<result name="success">/index.jsp</result>
+				</action>
+			</package>
+			<!--http://localhost:8080/struts/person/personAction-->
+			<!--<package name="default" extends="struts-default" namespace="/person">
+				<action name="PersonAction" class="com.chinasofti.action.PersonAction">
+					<result name="list">/index.jsp</result>
+				</action>
+			</package>-->
+		</struts>
+		】】】------------------------------------------------
+		
+		struts.xml的配置
+	<package name="default" namespace="/person" extends="struts-default">  //---随意的包名保证不冲突，  访问路径  默认继承
+        <action name="loginAction" class="com.zzx.struts.action.PersonAction" >  //--action名随意起  调用的Action路径
+            <result name="success">/index.jsp</result>   //访问成功后所跳转的界面
+        </action>
+    </package>
+	
+============================================================================		
+		创建domain用来接收界面上传来的数据，要与form表单的name相同
+		创建Action
+			1.实现Action借口：xwork2包（在execute中写执行的内容）
+			2.自己编写
+				注意在接受表单的时候可以写get set方法
+				注意方法的返回值类型只能是String类型				
+public class UserInfo {
+    private Integer userId;
+    private String usserName;
+    private String password;
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
+    public String getUsserName() {
+        return usserName;
+    }
+
+    public void setUsserName(String usserName) {
+        this.usserName = usserName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+
+=============================================================
+				初识 Maven
+
+	配置：
+	1.下载maven
+	2.配置环境变量，（要在cmd中写一下mvn验证）把conf/setting.xml的miorro修改为国内的镜像
+	3.创建项目，左侧选maven如果没有到setting中的plugin配置中勾上maven的选项
+	4.选择maven。。。。。webapp的模板（注意不是coon的webapp）
+	5.设置setting为自己刚才编写写的setting路径，创建完成后注意要设置自动导入
+	6.在src文件夹中创建java文件夹并把它添加成source文件夹，在resource中创建XML Struts配置文件
+	命名为struts.xml
+	7.在添加maven  pom文件中添加以来
+	 <dependency>
+      <groupId>org.apache.struts</groupId>
+      <artifactId>struts2-core</artifactId>
+      <version>2.3.33</version>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+	
+	8.为maven配置filter（重要，必须做）
+  <filter>
+    <filter-name>struts2</filter-name>
+    <filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>struts2</filter-name>
+    <url-pattern>*.action</url-pattern>
+  </filter-mapping>
+  
+  -------------------------------------------------------------
+  ActionContext.getContext()这个相当于request
+  <%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="false" %>
+  isELIgnored="false" 
+	
+	
+	---------------------------------------------------------------------
+	ModelDriven<T>   getModel()方法用来创建实体用于接收界面表单的对象，所以对象的创建
+	要和表单的字段一样，这是因为struts实现的是BeanUtil，并且封装了MVN
+	public class PersonAction implements ModelDriven<Person> {
+    private Person person;
+
+    public String login(){
+        ///ServletActionContext.getRequest()  ----获得request的方法
+        ActionContext.getContext().put("person",person);
+        //ActionContext.getContext().getSession().put("")
+        System.out.println(person);
+        return "success";
+    }
+
+    public Person getModel() {//用于初始化
+        if(person==null){
+        person = new Person();
+        }
+        return person;
+    }
+}
+
+	MavenDrive<T> 
+	
+	---------------------------------------------------
+	
+	maven的依赖库
+	<dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>   compile  provided  
+    </dependency>
+	
+	-------------------------------------------------
