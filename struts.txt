@@ -125,6 +125,8 @@ public class UserInfo {
   </filter-mapping>
   
   -------------------------------------------------------------
+  
+  
   ActionContext.getContext()这个相当于request
   <%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="false" %>
   isELIgnored="false" 
@@ -133,6 +135,8 @@ public class UserInfo {
 	---------------------------------------------------------------------
 	ModelDriven<T>   getModel()方法用来创建实体用于接收界面表单的对象，所以对象的创建
 	要和表单的字段一样，这是因为struts实现的是BeanUtil，并且封装了MVN
+	
+	用来取值
 	public class PersonAction implements ModelDriven<Person> {
     private Person person;
 
@@ -154,6 +158,8 @@ public class UserInfo {
 
 	MavenDrive<T> 
 	
+	
+	怎样把值放入值栈？
 	---------------------------------------------------
 	
 	maven的依赖库
@@ -165,3 +171,186 @@ public class UserInfo {
     </dependency>
 	
 	-------------------------------------------------
+	
+	AciotnSupport    里面实现了 execute方法，返回success经常用来验证
+	
+	
+						配置
+===================================================================================
+	
+FileUpload   struts2里面没有severlet的相关内容所以引入servlet包
+
+public class FileUploadAction {
+    private String fileName;
+    private File file;
+    private String fileFileName;
+    private String fileContentType;
+    // fileName：aaa 自己表单上给的文件名
+    // file：upload_b1ca6ead_93a0_4efb_81b2_658607779bb2_00000001.tmpfile  临时缓存文件名
+    // FileName:18f66ed05b4dec7a6e4b75c58417a433-dawmbwj.jpg   上传时候的文件本来的文件名
+    // fileConetentType:image/jpeg  上传文件的格式
+    public String excute() throws  Exception{
+        //选择路径 自动创建跟目录
+
+        String path = ServletActionContext.getServletContext().getRealPath("/upload");
+
+
+
+        //创建文件夹路径并且以这个文件名命名这个文件
+        //再不进行读写操作的时候目录中先不会创建upload文件夹
+
+
+        File filePath = new File(path);
+
+        if(!filePath.exists()){
+            filePath.mkdir();
+        }
+
+
+        //System.out.println(path);
+
+
+         /*文间的名的高级利用
+         1.获得ip地址：
+          String addip = ServletActionContext.getRequest().getRemoteAddr();
+          System.out.println(addip);
+
+         2.应用日期来创建*/
+
+         String uname = UUID.randomUUID().toString().replace("-","");
+         System.out.println(uname);
+         fileFileName = uname + fileFileName.substring(fileFileName.indexOf("."));
+         System.out.println(fileFileName); // a2f5d04650df4102a38241e5e42892de.jpg
+
+
+        //文件写入: 先读后写  读文件  写道路径并且写文件名
+
+        InputStream is = new FileInputStream(file);
+        OutputStream os = new FileOutputStream(new File(filePath,fileFileName));
+
+        int num = is.read();
+        System.out.println("num:"+num);
+        while (num!=-1){
+            os.write(num);
+            num = is.read();
+        }
+
+        is.close();
+        os.close();
+
+        //System.out.println("fileName："+fileName+"file："+file.getName()+"fileFileName:"+fileFileName+"fileConetentType:"+fileContentType);
+        return "success";
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    public void setFile(File file) {
+        this.file = file;
+    }
+
+    public String getFileFileName() {
+        return fileFileName;
+    }
+
+    public void setFileFileName(String fileFileName) {
+        this.fileFileName = fileFileName;
+    }
+
+    public String getFileContentType() {
+        return fileContentType;
+    }
+
+    public void setFileContentType(String fileContentType) {
+        this.fileContentType = fileContentType;
+    }
+}
+
+
+<form action="FileUploadAction.action" method="post" enctype="multipart/form-data">
+    商品名称：<input type="text" name="fileName">
+    <input type="file" name="file">
+    <input type="submit" value="保存">
+</form>
+
+----------------------------------------------------
+		多文件上传
+		
+public class FileUploadListAction {
+    private String goodsName;
+    private List<File> file;
+    private List<String> fileFileName;
+    private List<String> fileContentType;
+
+    public String execute() throws  Exception{
+        String path = ServletActionContext.getServletContext().getRealPath("/upload");
+        File filePath = new File(path);
+        System.out.println(goodsName);
+        if(!filePath.exists()){
+            filePath.mkdir();
+        }
+
+        for (int i=0;i<file.size();i++){
+
+            String uName = UUID.randomUUID().toString().replace("-","");
+            String newName = uName + fileFileName.get(i).substring(fileFileName.get(i).lastIndexOf("."));
+
+            InputStream is = new FileInputStream(file.get(i));
+            OutputStream os = new FileOutputStream(new File(filePath,newName));
+
+            int num = is.read();
+            while (num != -1){
+                os.write(num);
+                num = is.read();
+            }
+            os.close();
+            is.close();
+        }
+        return "success";
+
+    }
+
+    public String getGoodsName() {
+        return goodsName;
+    }
+
+    public void setGoodsName(String goodsName) {
+        this.goodsName = goodsName;
+    }
+
+    public List<File> getFile() {
+        return file;
+    }
+
+    public void setFile(List<File> file) {
+        this.file = file;
+    }
+
+    public List<String> getFileFileName() {
+        return fileFileName;
+    }
+
+    public void setFileFileName(List<String> fileFileName) {
+        this.fileFileName = fileFileName;
+    }
+
+    public List<String> getFileContentType() {
+        return fileContentType;
+    }
+
+    public void setFileContentType(List<String> fileContentType) {
+        this.fileContentType = fileContentType;
+    }
+}
+	
+	
+	

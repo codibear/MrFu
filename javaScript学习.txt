@@ -1,3 +1,4 @@
+
 弱类型语言 所以不需要指明类型
 1.冲突符号的对策
 	var god = "it'\s true0";
@@ -99,4 +100,18 @@ setAttribute("attr","value");
 事件处理函数：onclick  格式：event = "method(s)"
 	onclick = "showPic(this);return false"  //在a标签中调用方法但不跳转
 	
+nodeValue 用于改变一个文本节点的值
 	
+	
+	
+	
+	
+	
+	
+=======================================================
+	
+通过jquery的removeAttr实现的方法：
+"<a href=“www.baidu.com” id=“baidu”>百度</a>"
+js方法：
+$("#baidu").removeAttr("href");
+如此即可是a标签失效。
