@@ -1,0 +1,162 @@
+配置
+----------------------------------
+导入mysql的包
+用的是maven 要引入hibernate包
+在resource中建相应的hibernate.cfg.xml
+
+/D:\hibernate-release-5.2.10.Final\documentation\quickstart\html_single\hibernate-tutorials\basic\src\test\resources
+<hibernate-configuration>
+
+    <session-factory>
+//hibernate-release-5.2.10.Final\project\etc\elcache  中有相关配置
+        <!-- Database connection settings -->   
+        <property name="connection.driver_class">com.mysql.jdbc.Driver</property>
+        <property name="connection.url">jdbc:mysql:///test</property>
+        <property name="connection.username">root</property>
+        <property name="connection.password">root</property>
+
+
+        <!-- 配置方言 SQL dialect 关键：mysql后面有个5-->
+        <property name="dialect">org.hibernate.dialect.MySQL5Dialect</property>
+
+        <!-- Echo all executed SQL to stdout -->
+        <property name="show_sql">true</property>
+
+		
+        <property name="hibernate.format_sql">true</property>
+
+        <!-- Drop and re-create the database schema on startup 数据库添加的类型如果是create每次如果有存在的表，他会自动覆盖-->
+        <property name="hbm2ddl.auto">update</property>
+
+        <!--设置当前的session方向放置在localthread对象中-->
+        <property name="hibernate.current_session_context_class">thread</property>
+
+		<!--映射文件-->//这里在 resource中建文件夹 要一层一层的建否则的话 hibernate.cfg.xml不识别
+        <mapping resource="com/zzx/domain/Person.hbm.xml"/>
+		
+		
+
+    </session-factory>
+
+</hibernate-configuration>
+
+----------------------------------------------
+配置实体类，用来建表  #######注意：实体类必须序列化#######
+配置resource中的 ---- 一层一层的建文件夹
+\hibernate-release-5.2.10.Final\documentation\quickstart\html_single\hibernate-tutorials\basic\src\test\java\org\hibernate\tutorial\hbm  Entity.cfg.xml
+
+<hibernate-mapping package="com.zzx.domain">
+    <class name="Person">
+        <id name="pId">
+            <generator class="increment"/>
+        </id>
+        <property name="pName" length="20" not-null="true"/>
+        <property name="pDes" column="miaoshu" type="java.util.Date"/>
+    </class>
+</hibernate-mapping>
+
+------------------------------------------------
+然后写一个工具类，用于初始化。
+public class HibernateUtils{
+	private static SessionFactory sessionFactory;
+	
+	static{
+		Configuration configuration = new Configuration().configure();
+		sessionFactory = Configuration.buildSessionFactory();
+	}
+	
+	public static Session getSession(){
+		session = sessionFactory.getCurrentSession();
+		return session;
+	}
+	public static Transaction getTransaction(){
+		return getSession.beginTransaction();
+	}
+	public static void colseSession(Session session){
+		if(session!=null){
+			session.close();
+		}
+	}
+	closeSessionFactory(SF)
+}
+----------------------------------------------------
+注意每一个项目都应该有一个事务区处理语句
+除了删改，都要先查询
+增：
+session = HibernateUtils.getSession();
+add(){
+Person person = new Person ();
+peron.set...();
+
+Transaction tx = HibernateUtils.getTransaction();
+session.save(peron);
+tx.commit;
+session.close();
+}
+
+delete(){
+Transaction tx = HibernateUtils.getTransaction();
+Person person = session.load(Person.class,1);
+session.delete(peron);//update(person);
+tx.commit;
+session.close();
+}
+查：
+load(){
+Transaction tx = HibernateUtils.getTransaction();
+Person peron = session.load(Person.class,1);
+tx.commit;
+session.close();
+}
+
+query(){
+Transaction tx = HibernateUtils.getTransaction();
+Query query = session.createQuery("from Person where pName=?");
+List<Person> person = query.setParameter(0,"sfads") //?从0开始
+for(Person p:person){
+sout(p.getPid());
+}
+session.close();
+}
+
+
+
+
+---------------------------------------------------
+一个基本的项目配置。
+
+@Test
+    public void testFirst() {
+        StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+                .configure() // 会默认的加载根目录下名称为hibernate.cfg.xml文件
+                .build();
+
+        /*建立SessionFactory工厂*/
+        SessionFactory sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
+        /*开启一次会话*/
+        Session session = sessionFactory.openSession() ;
+
+        //完成客户信息的添加
+        //1.创建实体对象
+        Customer customer = new Customer() ;
+        //2.设置
+        customer.setCus_Name("天津华琴科技有限公司");
+        customer.setDesc("这是一家搞银行的企业，最喜欢银行");
+        customer.setCreateDate(new Date());
+        //3.存入数据库
+        //3-1:开启事务
+        Transaction tx = session.beginTransaction() ;
+
+        //session进行保存操作
+        session.save(customer) ;
+
+        //事务提交
+        tx.commit();
+
+        //关闭资源
+        session.close();
+        sessionFactory.close();
+    }
+
+--------------------------------------------------------
+
