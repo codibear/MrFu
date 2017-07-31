@@ -30,6 +30,9 @@
 
         <!--设置当前的session方向放置在localthread对象中-->
         <property name="hibernate.current_session_context_class">thread</property>
+		
+		 <!--这个是用来设置隔离类型的  readuncommit  1 2 4 8 幻读  脏读-->  
+        <property name="hibernate.connection.isolation">4</property>
 
 		<!--映射文件-->//这里在 resource中建文件夹 要一层一层的建否则的话 hibernate.cfg.xml不识别
         <mapping resource="com/zzx/domain/Person.hbm.xml"/>
@@ -57,6 +60,9 @@
 
 ------------------------------------------------
 然后写一个工具类，用于初始化。
+
+静态快中去进行sessionFactory的创建
+
 public class HibernateUtils{
 	private static SessionFactory sessionFactory;
 	
@@ -112,7 +118,8 @@ session.close();
 query(){
 Transaction tx = HibernateUtils.getTransaction();
 Query query = session.createQuery("from Person where pName=?");
-List<Person> person = query.setParameter(0,"sfads") //?从0开始
+query.setParameter(0,"sfads")
+List<Person> person = query.list(); //?从0开始    /////uniqueResult 获得一个对象
 for(Person p:person){
 sout(p.getPid());
 }
@@ -159,4 +166,546 @@ session.close();
     }
 
 --------------------------------------------------------
+主键：自然主键  设置主键类型  自增
+常用 increment  identify  native sequence  uuid 
 
+--------------------------------------------------------
+		通过filteer关闭session配置
+		一对多多对一	
+		查询
+			聚合查询	模糊查询	条件查询	
+			
+			分页查询
+				真分页
+					 通过数据库分页的查询，速度极快，不支持移到其他平台
+					
+				假分页
+					全部都查询，然后从放到内存中，非常耗费内存
+					
+					-----------------------------------------------------
+					
+						分页思想
+					
+					总页  上一页	下一页	  （行数	第几页数）  limit 从那开始 （行数×（页数-1）） , 读取几条（行数）
+					1页	行数×（页数-1）
+					2页 行数×（页数-1）
+					
+					坑：最后一页	和第一页(直接返回1)	以及页面的跳转
+			
+		public class HibernateTest {
+
+    @Test
+    public void test6() {
+        Session session = HibernateUtils.getSession();
+        Transaction tx = HibernateUtils.getTransaction();
+
+        for(int i = 0 ; i < 10 ; i++) {
+            Grade grade = new Grade() ;
+            grade.setGradeName((i+1) + "年级");
+            session.save(grade) ;
+        }
+        tx.commit();
+    }
+    @Test
+    public void test5() {
+        Session session = HibernateUtils.getSession();
+        Transaction tx = HibernateUtils.getTransaction();
+
+        //HQL
+        /**
+         * 只适用于查询
+         *
+         * 带条件查询
+         * 聚合查询
+         * 模糊查询 like
+         * 分页查询
+         * setFirstResult(起始页)
+         * setMaxResult(每页显示条数)
+         * 分组查询
+         *
+         */
+
+        /**
+         * 实际开发中很少会应用，基本上都是通过load或者是get方式进行加载
+         */
+        /*List grades = session.createQuery("from Grade g inner join g.persons").list() ;
+        for(int i = 0 ;  i < grades.size() ; i++) {
+            System.out.println(((Grade)grades.get(0)).getGradeName());
+        }*/
+
+        /**
+         * 带条件查询
+         */
+         /*Query qr = session.createQuery("FROM Grade g WHERE g.gradeId = ?") ;
+         qr.setParameter(0,1) ;
+        List<Grade> grades =qr.list();
+        System.out.println(grades.get(0).getGradeName());*/
+
+        /**
+         * 聚合查询
+         */
+         /*Long num = (Long)session.createQuery("select count(*) from Grade g").uniqueResult() ;
+
+        System.out.println(num);*/
+
+
+        /**
+         * 模糊查询 like %字符串%
+         */
+
+        //Query query = session.createQuery("from Grade g WHERE g.gradeName LIKE :gradeName") ;
+        /*Query query = session.createQuery("from Grade g WHERE g.gradeName LIKE ?") ;
+
+        query.setParameter(0,"%温州%") ;
+
+        List<Grade> list = query.list() ;
+
+        for (Grade grade : list)
+            System.out.println(grade.getGradeName());*/
+
+
+
+
+
+
+
+        /**
+         * 分页查询
+         */
+        /*List<Grade> gradeList = session.createQuery("from Grade g ").setFirstResult(5).setMaxResults(5).list() ;
+
+        for(Grade grade :gradeList)
+            System.out.println(grade.getGradeName());*/
+
+
+        Grade grade = session.get(Grade.class,1) ;
+        System.out.println(grade.getGradeName());
+
+        /*session.close();*/
+        System.out.println("一共有" + grade.getPersons().size() + "个学生");
+
+        for(Person person : grade.getPersons()) {
+            System.out.println(person.getPname());
+        }
+
+    }
+
+    @Test
+    public void test4() {
+        Session session = HibernateUtils.getSession();
+        Transaction tx = HibernateUtils.getTransaction();
+
+        Grade grade = session.get(Grade.class,1) ;
+
+        Person person = new Person() ;
+        person.setPname("lisi");
+        person.setGrade(grade);
+
+        Person person1 = new Person() ;
+        person1.setPname("wangwu");
+        person1.setGrade(grade);
+
+        grade.addPerson(person);
+        grade.addPerson(person1);
+
+        session.save(person) ;
+        session.save(person1) ;
+
+        tx.commit();
+
+
+
+
+
+    }
+
+    @Test
+    public void test3() {
+        Session session = HibernateUtils.getSession() ;
+        Transaction tx =HibernateUtils.getTransaction() ;
+
+        Grade grade = session.get(Grade.class,1) ;
+        /*Grade grade = new Grade() ;
+        grade.setGradeName("二年级");       */
+
+        Person person = new Person() ;
+        person.setPname("张志雄");
+        person.setGrade(grade);
+
+        session.save(person) ;
+
+        tx.commit();
+
+    }
+
+    @Test
+    public void test2() {
+        Session session = HibernateUtils.getSession() ;
+        Transaction tx =HibernateUtils.getTransaction() ;
+
+        Grade grade = session.get(Grade.class,2);
+
+        Person person = new Person() ;
+        person.setPname("冯正民");
+        //建立关系
+        person.setGrade(grade);
+
+        session.save(person) ;
+        tx.commit();
+
+    }
+
+    @Test
+    public void test1() {
+        Session session = HibernateUtils.getSession() ;
+        Transaction tx =HibernateUtils.getTransaction() ;
+
+        Grade grade = new Grade() ;
+        grade.setGradeName("一年级");
+
+        session.save(grade) ;
+        tx.commit();
+
+    }
+
+    /**
+     * 关联映射(many-to-one、one-to-many)
+     *
+     * <many-to-one name=""  class=""  column="外键名称"  cascade="all|delete|refresh|create" />
+     * <set name="集合名称" inverse="true">
+     *      <key column="外键名称"/>
+     *      <one-to-may class="对方的类" />
+     * </set>
+     *
+     * HQL查询
+     * session.createQuery("查询语句 WHERE like (:sex)|?") ;返回值为Query对象
+     * query.setParameter((字符串占位符)|数值[0],具体参数值);
+     * query.list() :返回查询的集合
+     * query.iterator()：返回的是查询的迭代对象
+     * query.uniqueResult():当使用聚合函数时使用
+     * query.setFirstResult() :设置分页的起始位置
+     * query.setMaxResult() :设置每页多少条数据
+     */
+}
+
+
+======================================================================
+
+		Hibernate  +  struts2
+		
+1.maven下面的龙骨
+src 
+	main
+		java
+		resource
+		webApp
+			web.xml
+	test
+		java	
+		resource
+pom.xml
+	
+2.配置jdk1.8
+
+	maven setting.xml中配置
+	
+	<profile>
+            <id>jdk-1.8</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties> 
+                <maven.compiler.source>1.8</maven.compiler.source> 
+                <maven.compiler.target>1.8</maven.compiler.target> 
+                <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion> 
+            </properties>
+            <repositories>
+                <repository>
+                    <id>nexus</id>
+                    <name>local private nexus</name>
+                    <url>http://maven.oschina.net/content/groups/public/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>nexus</id>
+                    <name>local private nexus</name>
+                    <url>http://maven.oschina.net/content/groups/public/</url>
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+	
+3.maven 教程    maven 搭建私服
+
+4.更改junit版本到4.12  删除index.jsp
+5.导入依赖包  （按照顺序导包）
+
+	前端
+	fastJson
+	Action
+		Spring struts2 webwork
+	biz
+		
+	dao
+		hibernate mybatis	toplink
+	cache
+		ehCache	OSCache
+	后端
+	
+6.建包
+	domain
+	dao
+	biz
+	action
+		interceptor
+	util
+7.配置文件
+	hibernate.cfg.xml
+		在hibernate-core中把头部放进去
+		session-factory
+			connection-driver_class
+			connection.url
+			connection.username
+			connection.password
+		
+		方言
+		hibernatedialect  MySQL5Dialect
+		其他
+		show_sql true
+		format_sql true
+		
+		session对象
+		current_session_context_class thread
+		
+		数据库的更新操作
+		hbm2ddl.auto  update
+		
+		映射文件--
+		mapping resource
+		
+8.测试数据库连接（hibernateUtil）
+	
+	加载配置文件
+		Configuration config = new Configuration.configure(); //里面有好多的加载配置文件类型（远端、默认hibernate。cfg）
+		
+	建立SessionFactory工厂*/
+		SessionFactory sessionFactory = config.buildSessionFactory();
+	创建session
+		session = sessionFactory.getCurrentSession();
+		sout(session);
+	-------------------
+	从这里就可以判段是否能连接数据库（连不上也算能连接到）
+	
+	创建事务
+		session.getTransaction();
+	执行
+	
+	关闭资源
+	
+
+9.创建相关的数据库，建立实体类  (###注意一定要序列化###)
+	Department
+		deptno
+		deptname
+		loc
+	Employee
+		empno	int
+		empname	varchar
+		hiredate	date
+		sal  numbric(10,2)
+		
+	注意主外键关系
+		Set<>
+		
+10.配置映射文件(每一个类应该是一个hbm.xml，这样清晰，但hibernate不推荐)
+	持久化类 = 实体类 + 映射文件
+		反向工程（数据库有表） 不用去建立属性了
+	在core中找
+	
+	
+	<hibernate-mapping package"domian"
+	<class name "Dept">
+		<id name "deptNO"
+			<generator  identify
+		</id
+		<property name "dname" length="30" not-null "true"
+===========单个的一方反转（放弃控制权）
+		<set name="emps" inverse="true">
+			<key column="deptno"/>
+			<one-to-may class="Emp"/>
+		</set>
+	</class>
+	
+	
+	
+	
+	<hibernate-mapping package"domian"
+	<class name "Emp">
+		<id name "empno"
+			<generator "native"
+		</id
+		<property name "ename" length="30" not-null "true" type
+		<property name "hiredate" length="30" not-null "true" type="date"/>
+		
+---------------  type hibernate映射类型
+---------------  numeric 设置
+		<property name "sal" length="30" not-null "true" 
+			<column name="sal"  sql-type="numeric(10,3)"
+0--------------再多的一方配置
+		<many-to-one name="dept" column="deptno" class="Dept" cascade="save-update(,delete)"/> -------这是一个可变参数
+	</class>
+		
+		
+11.配置相关的mapping
+
+12.配置相关的包层  
+hibernate的dao层抛出的异常时HerbnateException 不用再往上层抛异常了
+列表的都用arraylist就行但是实体类必须用set因为一边都是进行增删改操作
+（servlet单是列多线程  action  actionContext ThreadLocal中每个都安全但是bizdao层不一定安全了）
+
+13.开始执行了  (注意一定要有事务去管理每一个执行语句)
+	==============
+	两个大问题 
+			session要延期	延迟加载机制
+			transaction的开启
+	HIbernate如果外键表中没有相关的数据就不去再查了
+	
+	==============
+××××××开启事务	 执行事务	关闭session×××××××
+session 中的内容是大家共享的所以应该去每一个方法中都去创建一个
+
+一对多中lazy="false" --- 每个字段都去查找一下表 （inverse） 严重影响性能（不管用不用都去查询）
+
+
+14.写到action层就可以去配置struts。xml了
+
+=============================
+<include file="">不同的组块加载到struts配置中的
+=============================
+	<package name = "dept" extends  namespace/dept
+		<action name = dept*  class  method {1} 
+			<result  name  erro>  /erro.jsp</>
+			
+		</action
+	</package
+	
+15.action 层
+	 private List <Dept> depts;
+	 getset
+	
+	
+16.前端的配置jsp(isEnignore false)
+s:debug
+
+17.配置web.xml filter
+
+			
+18.action 中配置拦截器(保证事务不被提交，session就可以延期)
+
+	public class HibernateSessionInterceptor extends AbstractInterceptor{
+		Session session = HibernateUtils.getSession()
+		//action中的session和拦截器中的session是一个session ThreadLocal
+		
+		//注意这tx和action中的就是两个了必须的得消灭action中
+		Transaction tx = session.beginTransaction();
+		String result = null;
+		
+		try{
+			result = actionInvocation.invoke();//放行  拦截就获取到
+			tx.commit();
+			return result;
+		}catch(Exception e){
+			e.printlnSrace();
+			tx.rollback();
+			result = null;
+		}finnally{
+			session.close();
+		}
+		
+		return "sessionFactory";
+	}
+			
+			
+19.在struts中配置interceptor
+	<package
+		<interceptors
+			<interceptor name="sessionInterceptor" class  HibernateSessionInterceptor
+			</interceptor>
+		>
+		
+		
+	在相关的想调用的session中添加interceptor
+	<action>
+		<interceptor-ref  name="sessionFactory"/>
+	</actino>
+intellij Editor inspections 可以调试spelling  去掉职能识别字母
+	
+================================================================	
+	 <!-- https://mvnrepository.com/artifact/jstl/jstl -->
+        <dependency>
+            <groupId>jstl</groupId>
+            <artifactId>jstl</artifactId>
+            <version>1.2</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/taglibs/standard -->
+        <dependency>
+            <groupId>taglibs</groupId>
+            <artifactId>standard</artifactId>
+            <version>1.1.2</version>
+        </dependency>
+
+
+
+        <!-- https://mvnrepository.com/artifact/org.apache.struts/struts2-core -->
+        <dependency>
+            <groupId>org.apache.struts</groupId>
+            <artifactId>struts2-core</artifactId>
+            <version>2.5.12</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>5.2.10.Final</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.6</version>
+        </dependency>
+
+<!---美丽的分割线-->
+
+        <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+	
+	

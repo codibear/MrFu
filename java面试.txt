@@ -1,0 +1,175 @@
+前端框架
+	miniui	ionic	vue.js	anlular.js	jqueryui	hui
+
+
+1.connection的实现和关闭
+
+===================================
+		J2ee 相关的知识
+J2ee本身是一个标准，应用于企业分布式开发的标准平台；
+
+j2ee也是一个框架，包括JDBC、EJB、JNDI、JMS、JTA 、RMI等技术。
+
+名词解析：
+
+JDBC： 是一种执行SQL语句的Java API，可以为多种关系数据库提供统一访问，它由一组由Java语言编写的类和接口组成，简单的说JDBC可做三件事情：与数据库建立连接、发
+送SQL语句、处理结果。
+
+EJB： 是一种服务器端组件体系结构，简化了JAVA开发企业级分布式组件应用程序的过程，EJB是J2ee的一部分，在J2ee里，EJB称为JAVA企业bean，是java的核心代码，
+
+分别是会话（session） bean，实体（entity）bean，消息驱动（MessageDriver）bean。简单点说，就是别人已经写好了一些javabean，你只需要去学习如何应用现成的框
+架去更快更快捷的开发。
+
+JNDI：Java命名服务目录，提供一个目录系统，让其他各地的应用程序在上面留下自己的索引，从而快速的定位和查询分布式应用系统。
+
+JMS：（Java   Message  Server）Java消息服务，提供各个应用程序之间的通讯，包括点对点的广播。
+
+JTA：(java Transaction Api) JAVA事务服务，提供各种分布式事务服务，用于程序只需调用现成的接口就行。
+
+RMI：对象请求中介协议，应用于通过远程调用服务，例如，一台计算机上运行一个程序，它提供股票分析服务，我们可以在本地计算机上直接调用它的服务，当然，这要通过一定的规范才能实现在异构系统之间进行通讯，  RMI是Java特有的。
+
+----------------------------------
+
+HashMap  和 HashTable 的区别
+Hashtable和HashMap类有三个重要的不同之处。第一个不同主要是历史原因。Hashtable是基于陈旧的Dictionary类的，HashMap是Java 1.2引进的Map接口的一个实现。
+　　
+也许最重要的不同是Hashtable的方法是同步的，而HashMap的方法不是。这就意味着，虽然你可以不用采取任何特殊的行为就可以在一个多线程的应用程序中用一个Hashtable，但你必须同样地为一个HashMap提供外同步。一个方便的方法就是利用Collections类的静态的synchronizedMap()方法，它创建一个线程安全的Map对象，并把它作为一个封装的对象来返回。这个对象的方法可以让你同步访问潜在的HashMap。这么做的结果就是当你不需要同步时，你不能切断Hashtable中的同步（比如在一个单线程的应用程序中），而且同步增加了很多处理费用。
+　　
+　第三点不同是，只有HashMap可以让你将空值作为一个表的条目的key或value。HashMap中只有一条记录可以是一个空的key，但任意数量的条目可以是空的value。这就是说，如果在表中没有发现搜索键，或者如果发现了搜索键，但它是一个空的值，那么get()将返回null。如果有必要，用containKey()方法来区别这两种情况。
+
+
+-------------------------------------
+
+
+ Connection connection = DataSource.getConnection();
+        String sql = "select * from userinfo where user_name=? and user_pwd=?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setString(1,username);
+        ps.setString(2,password);
+        ResultSet rs = ps.executeQuery();
+        UserInfo userInfo = null;
+        if(rs.next()){
+            userInfo = new UserInfo();
+            userInfo.setUser_name(rs.getString("user_name"));
+        }
+        DataSource.closeConnection(connection);
+        return userInfo;
+
+
+
+------------------------------------
+
+接口与类的区别：
+	接口不能用于实例化对象。
+	接口没有构造方法。
+	接口中所有的方法必须是抽象方法。
+	接口不能包含成员变量，除了 static 和 final 变量。
+	接口不是被类继承了，而是要被类实现。
+	接口支持多重继承。
+接口特性
+	接口中每一个方法也是隐式抽象的,接口中的方法会被隐式的指定为 public abstract（只能是 public abstract，其他修饰符都会报错）。
+	接口中可以含有变量，但是接口中的变量会被隐式的指定为 public static final 变量（并且只能是 public，用 private 修饰会报编译错误。
+	接口中的方法是不能在接口中实现的，只能由实现接口的类来实现接口中的方法。
+抽象类和接口的区别
+	1. 抽象类中的方法可以有方法体，就是能实现方法的具体功能，但是接口中的方法不行。
+	2. 抽象类中的成员变量可以是各种类型的，而接口中的成员变量只能是 public static final 类型的。
+	3. 接口中不能含有静态代码块以及静态方法(用 static 修饰的方法)，而抽象类是可以有静态代码块和静态方法。
+	4. 一个类只能继承一个抽象类，而一个类却可以实现多个接口。
+
+
+------------------------------------
+    同一个类        同一个包        不同包的子类        不同包非子类
+private     *
+default     *            *
+protected   *            *          *
+public      *            *          *                 *
+-----------------------------------------
+
+21.   概述反射和序列化
+Reflection 是Java被视为动态（或准动态）语言的一个关键性质。这个机制允许程序在运行时透过Reflection APIs取得任何一个已知名称的class的内部信息，包括其modifiers（诸如public, static 等等）、superclass（例如Object）、实现之interfaces（例如Cloneable），也包括fields和methods的所有信息，并可于运行时改变fields内容或唤起methods。本文借由实例，大面积示范Reflection APIs。
+
+22.   序列化就是一种用来处理对象流的机制，所谓对象流也就是将对象的内容进行流化。可以对流化后的对象进行读写操作，也可将流化后的对象传输于网络之间。序列化是为了解决在对对象流进行读写操作时所引发的问题。
+ 序列化的实现：将需要被序列化的类实现Serializable接口，该接口没有需要实现的方法，implements Serializable只是为了标注该对象是可被序列化的，然后使用一个输出流(如：FileOutputStream)来构造一个 ObjectOutputStream(对象流)对象，接着，使用ObjectOutputStream对象的writeObject(Object obj)方法就可以将参数为obj的对象写出(即保存其状态)，要恢复的话则用输入流
+ 
+ 
+ -----------------------------------------
+			什么事servlet？以及servlet的生命周期
+ Servlet是JAVAEE技术平台中的一种技术。Servlet本身是一个接口。该接口拥有Init、Service、destory等常用方法。通常在自定义Servlet的时候，会继承HttpServlet，而在此类中定义了doPost、doGet等常用的方法，根据用户的请求方式，在自定义的Servlet中，可以重写doGet或者doPost方法，进行相应的处理。
+在Servlet中，定义了Init、Service、destory三个方法。当url请求时，首先会执行Servlet中的init方法，进行初始化操作，可以读取web.xml文件中的初始化参数内容。如果用户使用url请求，则会找到自定义Servlet中的doGet或doPost请求，假如在自定义的Servlet中，包含了service方法，则会调用service方法，如果不存在，就根据对应请求执行对应的方法，Servlet自身是一个单实例支持多线程操作的对象，所以可能存在县城安全性问题，当Servlet容器发生宕机或关闭的情况下，就会执行Servlet中的destory方法进行销毁操作。
+public class LoginServlet extends HttpServlet{
+	protected void doGet(HttpServletRequest req,HttpServletResponse resp) {
+
+}
+
+protected void doPost(HttpServletRequest req,HttpServletResponse resp) {
+
+}
+
+}
+
+-----------------------------------------------
+9、一个用户具有多个角色，请查询出该表中具有该用户的所有角色的其他用户。
+select count(*) as num,tb.id 
+from 
+ tb,
+ (select role from tb where id=xxx) as t1
+where
+ tb.role = t1.role and tb.id != t1.id
+group by tb.id 
+having 
+	num = select count(role) from tb where id=xxx;
+
+-----------------------------------------------
+	
+JSP中动态INCLUDE与静态INCLUDE的区别？
+动态include:通过jsp的指令使用<jsp:include page=”目标页面”/>
+先进行计算，然后再进行页面的包含。
+静态include：通过页面指令<%@ include=”目标页面”%>
+先包含页面，然后再进行计算。
+a.jsp
+<%
+	Int num = 10 ;
+	out.println(num);
+%>
+b.jsp
+<%@ include=”a.jsp”%>
+<%
+	int num = 5 ;   //此时当页面运行时，就会抛出异常。
+%>
+
+动态包含：
+	此时能够正常运行。。。
+	
+------------------------------------------------
+2.  什么是可变参数？用简单代码展示可变参数的使用。
+解析：如果一个类中的某个方法，要接受某个类型的参数，而参数个数却不确定，这种情况下，可以将这个参数使用数组类型或者集合类型封装，然而使用该方法时就比较麻烦，必须先把参数先封装成数组或者集合。可变参数就能够解决这个问题。
+参考答案：可变参数是指参数个数不确定的参数，如下所示：
+public static int add(int..args){
+    …………	
+}
+上述方法的args就是可变参数，使用add方法时，形式参数可以是任意多个int型数值。
+
+---------------------------------------------------
+3.  什么是泛型？泛型有什么作用？
+解析：泛型是JDK5中增加的特性，API中有大量的泛型接口、泛型类及泛型方法等。程序员需要了解泛型的作用，尤其在使用集合框架时，往往需要使用到泛型。
+参考答案：泛型的本质就是参数化类型，也就是说把数据类型指定为一个参数。在需要声明数据类型的地方，就可以不指定具体的某个类型，而是使用这个参数。这样一来，就能够在具体使用时再指定具体类型，实现了参数的“任意化”。泛型的好处是在编译的时候能够检查类型安全，并且所有的强制转换都是自动和隐式的，提高代码的重用率。
+
+----------------------------------------------------
+			什么叫做多态函数
+多态函数就是参数的类型是某个父类类型，具体为这个参数赋值的不同以使用该父类的任意子类的对象。使用多态参数，可以使程序的扩展性更好，即使%%%%的子类方法不需要任何修改，就能接受子类类型进行处理。
+
+-----------------------------------------------------
+			依赖关系是一种瞬时关系
+依赖关系是一种瞬时关系，A依赖B，指的是A的某个行为的参数是B的类型，也就是说，A要想实现这个行为，必须依赖B的实例，A关联B，是一种长久的关系。？的是B作为A的属性存在，只要实例化一个A的对象，就会为这个A的对象实例化一个B的对象，作为它的属性使用，可以在A中任何需要使用B的地方使用B。
+
+-----------------------------------------------------
+
+术语来讲的区别：
+1.==是判断两个变量或实例是不是指向同一个内存空间    equals是判断两个变量或实例所指向的内存空间的值是不是相同 
+2.==是指对内存地址进行比较    equals()是对字符串的内容进行比较
+3.==指引用是否相同    equals()指的是值是否相同
+
+作者：涂鸦
+链接：https://www.zhihu.com/question/26872848/answer/34357265
+来源：知乎
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。

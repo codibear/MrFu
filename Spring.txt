@@ -1,0 +1,35 @@
+ /**
+     * 1.加入spring依赖
+     * 2.生成spring的配置文件
+     * 3.将需要new的层次，在配置文件中进行声明
+     *    <bean id="对象名" class="接口的实现类" />
+     *    3-1：如果想要引用某一个bean，两种方式
+     *              构造方法注入
+     *              setter属性注入
+     *              ref:代表引用某一个对象
+     *              value:代表注入的字符串值
+     *     3-2: 使用时，通过
+     *              ApplicationContext context = new ClassPathXmlApplicationContext(配置文件路径) ;
+     *              接口 对象名 = context.getBean("获取到配置的id名称") ;
+     *              对象名.xxxx() ;
+     *
+     *    在基础层面，最为重要的对象，就是BeanFactory，可以通过此接口实现IOC（ Inversion of Control）即DI(Dependency Injection)。
+     *
+     *    在Spring如果想设置多实例，可以通过scope设置，sigleton|prototype
+     *
+     *    程序的运行主要依靠于对象中的方法！！！
+     *
+     *    练习：
+     *      完成打印机打印功能:
+     *
+     *      打印机
+     *          纸张
+     *              A4
+     *              B5
+     *          墨盒
+     *              黑白
+     *              彩色
+     *
+     *                  功能:打印
+     *
+     */
