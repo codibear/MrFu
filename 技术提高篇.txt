@@ -1,0 +1,200 @@
+				专题一：分页
+=========================================================
+public class PageBean<T> implements Serializable{
+    private int currentPageNo = 1;
+    private int pageSize;
+    private int totalRecords;
+    private int totalPageNo;
+
+    private List<T> datas;
+
+
+
+    public int getPreviewPageNO(){
+        if(currentPageNo<=1)
+            return 1;
+        return currentPageNo-1;
+    }
+
+    public int getNextPageNo(){
+        if(currentPageNo>=getTotalPageNo())
+            return getTotalPageNo();
+        return currentPageNo+1;
+    }
+
+
+    public int getCurrentPageNo() {
+        return currentPageNo;
+    }
+
+    public void setCurrentPageNo(int currentPageNo) {
+        this.currentPageNo = currentPageNo;
+    }
+
+    public int getPageSize() {
+        return pageSize;
+    }
+
+    public void setPageSize(int pageSize) {
+        this.pageSize = pageSize;
+    }
+
+    public int getTotalRecords() {
+        return totalRecords;
+    }
+
+    public void setTotalRecords(int totalRecords) {
+        this.totalRecords = totalRecords;
+        int totalPageNo = this.totalRecords%pageSize == 0?this.totalRecords/pageSize:this.totalRecords/pageSize+1;
+        this.setTotalPageNo(totalPageNo);
+    }
+
+    public int getTotalPageNo() {
+        return totalPageNo;
+    }
+
+    public void setTotalPageNo(int totalPageNo) {
+        this.totalPageNo = totalPageNo;
+    }
+
+    public List<T> getDatas() {
+        return datas;
+    }
+
+    public void setDatas(List<T> datas) {
+        this.datas = datas;
+    }
+}
+------------------------------------------------------------------------
+public interface BaseDao <T> {
+    void save(T t);
+    void delet(T t);
+    void update(T t);
+    T loadById(Serializable id);
+    List<T> findAll(String table);
+    PageBean<T> findAll(DetachedCriteria dc, int currentPageNo, int pageSize);
+}
+
+
+public class BaseDaoImpl<T> extends HibernateDaoSupport implements BaseDao<T>{
+    private static SessionFactory sessionFactory;
+    private Class clazz;
+    public BaseDaoImpl(){
+        Class c = this.getClass();
+        System.out.println("this CLass"+c);
+        Type type = c.getGenericSuperclass();
+        System.out.println("superClass.type:"+type);
+
+        if(type instanceof ParameterizedType){
+            ParameterizedType parameterizedType = (ParameterizedType)type;
+            Type [] types = parameterizedType.getActualTypeArguments();
+            this.clazz = (Class)types[0];
+        }
+    }
+    @Override
+    public void save(T t) {
+        this.getHibernateTemplate().save(t);
+    }
+
+    @Override
+    public void delet(T t) {
+
+
+        this.getHibernateTemplate().delete(t);
+    }
+
+    @Override
+    public void update(T t) {
+        this.getHibernateTemplate().update(t);
+    }
+
+    @Override
+    public T loadById(Serializable id) {
+        return (T)this.getHibernateTemplate().load(clazz,id);
+    }
+
+    @Override
+    public List<T> findAll(String table) {
+        DetachedCriteria detachedCriteria = DetachedCriteria.forClass(clazz);
+        return (List<T>)this.getHibernateTemplate().findByCriteria(detachedCriteria);
+    }
+
+	
+	//分页功能的实现
+    @Override
+    public PageBean<T> findAll(DetachedCriteria dc, int currentPageNo, int pageSize) {
+        /*if(currentPageNo<=1)
+            currentPageNo = 1;
+        if(pageSize<=1);
+        pageSize=2;*/
+
+        PageBean pageBean = new PageBean();
+
+        pageBean.setCurrentPageNo(currentPageNo);
+        pageBean.setPageSize(pageSize);
+        //cha xun huode shu ju
+        List<T> datas = (List<T>) this.getHibernateTemplate().findByCriteria(dc,(currentPageNo-1) * pageSize,pageSize);
+
+        pageBean.setDatas(datas);
+
+        this.getHibernateTemplate().findByCriteria(dc.setProjection(Projections.rowCount())) ;
+
+        //查询总记录数  这个转换很重要  list -> obj -> long -> int
+        Object o =  (Object)this.getHibernateTemplate().find("SELECT COUNT(*) FROM Dept").get(0);
+        long num = (long) o;
+        int count = (int)num;
+        //将总记录数设置在pageBean对象中，以便计算总页数
+        pageBean.setTotalRecords(count);
+
+
+        return pageBean;
+    }
+}
+
+----------------------------------
+		action层的调用
+public String pageNext() throws IOException {
+
+        DetachedCriteria dc =  DetachedCriteria.forClass(Dept.class);
+		
+		//调用方法去获得一个pagebean获得后就已经获得了所有数据
+		
+        pageBean = deptBiz.findAll(dc,currentPageNo,pageSize);
+        System.out.println( pageBean.getDatas().get(0).getDeptName()+"dddddddddddddddddddddddddddddddddddddddddddddd");
+        HttpServletResponse response = ServletActionContext.getResponse();
+
+        response.setCharacterEncoding("UTF-8");
+
+        //将文件的类型设置为json格式
+        response.setContentType("text/json");
+
+        PrintWriter out = response.getWriter() ;
+
+        String jsonStr = JSON.toJSONString(pageBean) ;
+        System.out.println(jsonStr);
+
+        out.write(jsonStr);
+        return NONE;
+    }
+	
+------------------------------
+		前端的调用
+ $.get("deptpageNext.action",function (data) {
+                alert(data.totalPageNo)
+                var totalPageNo = data.totalPageNo;
+                var totalRecords = data.totalRecords;
+                alert(totalRecords);
+                $("#totalPageNo").html(totalPageNo);
+                $("#totalRecords").html(totalRecords);
+                $("#currentPageNo").html(data.currentPageNo);
+                var tr = "<tr>";
+                $(data.datas).each(function (i,obj) {
+                    var td = "<td>"+obj.deptNO+"</td>"+
+                        "<td>"+obj.deptName+"</td>"+
+                        "<td>"+obj.loc+"</td>";
+                    tr = tr+td+"</tr>";
+                });
+                $("#tabletwo").append(tr);
+            });
+
+===================================================================================================

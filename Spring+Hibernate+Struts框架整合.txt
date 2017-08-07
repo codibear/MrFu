@@ -1,0 +1,582 @@
+问题1.配置文件中写了session那么  getHibernateTemplate 还用些么
+findAll 通过spring的getHibernateTemplate
+
+
+1.先导入maven依赖
+2.建造相关的包结构 (可以引进log4j)
+	domian
+	dao
+	biz
+	action
+
+3.domian层  注意要实现序列化
+
+4.dao层 
+	实现类中	extends HibernateDaoSupport implements DeptDao
+	方法中	this.getHibernateTemplate.save();
+	
+5.biz层	 
+
+	在最上面有一个@Transcationl这个和下面在application中的配置文件的配置信息有关，否则的话会(以前是我们自己配置事务)
+	报出异常	 Turn your Session into FlushMode.COMMIT/AUTO or remove 'readOnly' marker from transaction definition.
+	<!-- 开启事务的注解 -->
+	
+	
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+	声明dao（因为一会得用）  由于这个原因所以在配置文件中进行配置
+	注入dao所以要写set方法
+ 
+ 
+6.action层	
+
+	ajax更新需要返回NONE，不能让他去跳转页面
+	通过get/set方法为jsp页面中获得的值收集数据
+	这里是继承了ActionSupport  并且注入了 Biz和Domain(用来填数据)
+	  public String save() throws Exception {
+
+        this.deptBiz.save(dept);
+
+        HttpServletResponse response = ServletActionContext.getResponse() ;
+
+        Message msg = new Message("1") ;
+
+        String jsonStr = JSON.toJSONString(msg) ;
+
+        response.getWriter().write(jsonStr);
+
+        return NONE ;
+    }
+	
+
+最后.配置文件   先进性hibernate和spring的整合
+
+	先进行hbm.xml的配置
+	
+		<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+		<!--deptno dname loc-->
+		<hibernate-mapping package="com.chinasofti.oa.domain">
+			<class name="Dept">
+				<id name="deptNO">
+					<generator class="identity"/>
+				</id>
+				<property name="dname" length="30" />
+				<property name="loc" not-null="true" length="100" />
+			</class>
+		</hibernate-mapping>
+
+------------------------------------------------------------------
+	然后进行applicationContext.xml配置
+	
+		<import resource="applicationContext-dao.xml" />
+		下面的三个要用<import 的方式导入到applicationContext.xml中
+		但是导入的时候一定要注意他是从下往上导入的，因为有依赖关系
+		
+	=======
+	=======
+		applicationContext-dao.xml   里面配置SessionFactory
+		
+	<bean id="deptDao" class="com.chinasofti.oa.dao.impl.DeptDaoImpl">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+		
+	=======
+	=======
+		applicationContext-biz.xml	里面配置Dao
+		applicationContext-action.xml	里面配置scope:protoType
+		
+		<!--
+        Spring管理之下的所有对象，默认都是单例状态，而Struts中的Action都是多实例。
+        所以需要将bean的scope作用域设置为prototype
+		-->
+--------------------------------------------------------------------------	
+初步测试
+================================
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("classpath:applicationContext.xml")
+public class TestDeptBiz {
+
+    @Resource
+    private DeptBiz deptBiz ;
+
+    @Test
+    public void save() {
+        Dept dept = new Dept() ;
+        dept.setDname("保安堂");
+        dept.setLoc("苏州省");
+        this.deptBiz.save(dept);
+    }
+}
+================================
+		
+5.spring+sturts整合
+
+	先设置web.xml的filter
+		配置struts配置文件
+		这里如果想要传递json数据要继承为(sturts自带的json)	json-default
+		
+		<struts>
+			<!--将对象工厂交给spring进行管理-->
+			<constant name="struts.objectFactory" value="spring"/>   //标志着把struts交给了sprin托管
+			<package name="dept" extends="struts-default" namespace="/dept">
+				<action name="dept*" class="deptAction" method="{1}">
+					<result>index.jsp</result>
+				</action>
+			</package>
+		</struts>
+		
+6.配置web.xml这里有增添了  头信息	监听器	上下文xml(详情见下)
+
+===============================
+以上是一个一个对象的模型
+===============================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+自连接：自己去连接到自己的一个字段
+	例如：boss和员工都有id但是员工要有自己的部门经理
+		所以他去自关联自己表中的其他id
+
+		
+		
+		
+1.建立多对一或者自连接的查询	这里面涉及了一个session生命周期问题
+
+	通过web。xml的这句引用解决
+	<!--
+        放置session closed异常出现。
+    -->
+    <filter>
+        <filter-name>OpenSessionInViewFilter</filter-name>
+        <filter-class>org.springframework.orm.hibernate5.support.OpenSessionInViewFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>OpenSessionInViewFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+
+	Emp	===	Dept
+
+manytoon	set onetomany	主要是看想建造的是哪一方？emp是多的一方所以第一个单词是many对应的是one
+这里emp的id 有一个自己的自关联  为自己的id写一个manytoone
+	自关联的父级id这么配置	private Emp mgr;
+	
+存放的时候就是在biz层去调用相应的dao
+	比如说：在emp中存储dept的外键，要通过deptdao去查找相应的经理id所对应的内容然后通过emp.set(Dept),装进去。
+	
+	
+
+
+
+
+
+---------------------------------------------------------
+
+		save接收
+		
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>Title</title>
+    <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery.min.js"></script>
+
+    <script type="text/javascript">
+        $(function () {
+            $("input[type='button']").click(function () {
+                $.get("deptsave.action",$("form").serialize(),function (data) {
+
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <form>
+        <input required type="text"  name="dept.deptName" placeholder="请输入部门名称">
+        <input required type="text" name="dept.loc" placeholder="请输入部门位置">
+        <input type="button" value="提交">
+    </form>
+</body>
+</html>
+
+--------------------------------------------------------------------------
+action层	配置文件必须写scope：protoType
+
+list	这里要返回none因为ajax是不会跳转页面的
+
+  public String list() throws IOException {
+        List<Dept>  depts = deptBiz.findAll();
+        HttpServletResponse response = ServletActionContext.getResponse();
+        response.setContentType("text/json");
+        String str = JSON.toJSONString(depts);
+        response.getWriter().write(str);
+
+        response.setCharacterEncoding("UTF-8");
+        System.out.println(str);
+        return NONE;
+    }
+
+=================================
+
+		list接收
+		
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>Title</title>
+    <script type="text/javascript" src="${pageContext.request.contextPath}/js/jquery.min.js"></script>
+
+    <script type="text/javascript">
+        $(function () {
+           $.get("deptlist.action",function (data) {
+               var tr = "<tr>";
+               $(data).each(function (i,obj) {
+                   alert(obj.loc) ;
+                   var td = "<td>"+obj.deptName+"</td>"+
+                       "<td>"+obj.loc+"</td>";
+                   tr = tr+td+"</tr>";
+               });
+               $(table).append(tr)
+           })
+        });
+    </script>
+</head>
+<body>
+<table id="tableone">
+<tr>
+    <td>bumen</td>
+    <td>bumen</td>
+</tr>
+</table>
+
+</body>
+</html>
+
+		
+
+===================================================================================
+		
+		
+		web.xml文件配置
+		
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app
+        version="3.0"
+        xmlns="http://java.sun.com/xml/ns/javaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+
+    <!--当web容器启动时，加载spring的配置文件-->
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:applicationContext.xml</param-value>
+    </context-param>
+
+    <!--
+        放置session closed异常出现。为了延长transaction声明到web层
+    -->
+    <filter>
+        <filter-name>OpenSessionInViewFilter</filter-name>
+        <filter-class>org.springframework.orm.hibernate5.support.OpenSessionInViewFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>OpenSessionInViewFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+
+    <filter>
+      <filter-name>struts2</filter-name>
+      <filter-class>org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter</filter-class>
+    </filter>
+  <filter-mapping>
+    <filter-name>struts2</filter-name>
+    <url-pattern>*.action</url-pattern>
+  </filter-mapping>
+
+    <!--欢迎页面-->
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+    <!--异常处理页面-->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/404.html</location>
+    </error-page>
+</web-app>
+
+
+
+===================================================================================
+
+		applicationContext的全部配置信息
+		
+		
+	<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context.xsd 
+        http://www.springframework.org/schema/aop 
+        http://www.springframework.org/schema/aop/spring-aop.xsd 
+        http://www.springframework.org/schema/tx 
+        http://www.springframework.org/schema/tx/spring-tx.xsd ">
+
+    <!-- 先配置C3P0的连接池 -->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver"/>
+        <property name="jdbcUrl" value="jdbc:mysql:///test"/>
+        <property name="user" value="root"/>
+        <property name="password" value="root"/>
+    </bean>
+
+    <!-- LocalSessionFactoryBean加载配置文件 -->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+        <!-- 先加载连接池 -->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 加载方言，加载可选 -->
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+                <prop key="hibernate.show_sql">true</prop>
+                <prop key="hibernate.format_sql">true</prop>
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+            </props>
+        </property>
+
+        <!-- 引入映射的配置文件 -->
+        <property name="mappingDirectoryLocations">
+            <list>
+                <value>classpath*:/com/chinasofti/oa/domain/</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 先配置平台事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+    
+    <!-- 开启事务的注解 -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <!--将其他模块的Spring配置文件导入到总文件中-->
+    <import resource="applicationContext-dao.xml" />
+    <import resource="applicationContext-biz.xml" />
+    <import resource="applicationContext-action.xml" />
+</beans>
+	
+================================================================================
+applicationContext的头信息
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context.xsd 
+        http://www.springframework.org/schema/aop 
+        http://www.springframework.org/schema/aop/spring-aop.xsd 
+        http://www.springframework.org/schema/tx 
+        http://www.springframework.org/schema/tx/spring-tx.xsd ">	
+	
+	
+=====================================
+log4j.properties
+
+
+### direct log messages to stdout ###
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.Target=System.err
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d{ABSOLUTE} %5p %c{1}:%L - %m%n
+
+### set log levels - for more verbose logging change 'info' to 'debug' ###
+
+log4j.rootLogger=debug, stdout
+	
+	
+=====================================
+
+依赖包
+
+<!-- https://mvnrepository.com/artifact/jstl/jstl -->
+    <dependency>
+      <groupId>jstl</groupId>
+      <artifactId>jstl</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/taglibs/standard -->
+    <dependency>
+      <groupId>taglibs</groupId>
+      <artifactId>standard</artifactId>
+      <version>1.1.2</version>
+    </dependency>
+
+
+ <!-- https://mvnrepository.com/artifact/org.apache.struts/struts2-core -->
+    <dependency>
+      <groupId>org.apache.struts</groupId>
+      <artifactId>struts2-core</artifactId>
+      <version>2.5.12</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.struts/struts2-spring-plugin -->
+    <dependency>
+      <groupId>org.apache.struts</groupId>
+      <artifactId>struts2-spring-plugin</artifactId>
+      <version>2.5.12</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.struts/struts2-json-plugin -->
+    <dependency>
+      <groupId>org.apache.struts</groupId>
+      <artifactId>struts2-json-plugin</artifactId>
+      <version>2.5.12</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.struts/struts2-convention-plugin -->
+	
+	
+    <!--Struts2注解应用-->
+	
+	
+    <dependency>
+      <groupId>org.apache.struts</groupId>
+      <artifactId>struts2-convention-plugin</artifactId>
+      <version>2.5.12</version>
+    </dependency>
+
+
+    <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>5.2.10.Final</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/com.mchange/c3p0 -->
+    <dependency>
+      <groupId>com.mchange</groupId>
+      <artifactId>c3p0</artifactId>
+      <version>0.9.5.2</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
+    <dependency>
+      <groupId>com.alibaba</groupId>
+      <artifactId>fastjson</artifactId>
+      <version>1.2.35</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+      <version>4.3.9.RELEASE</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.springframework/spring-beans -->
+	
+	
+	
+	<!--这个也是新导入的包相比于spring+hibernate-->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+      <version>4.3.9.RELEASE</version>
+    </dependency>
+
+
+
+    <!-- https://mvnrepository.com/artifact/org.springframework/spring-context -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <version>4.3.9.RELEASE</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.springframework/spring-orm -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-orm</artifactId>
+      <version>4.3.9.RELEASE</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.springframework/spring-tx -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-tx</artifactId>
+      <version>4.3.9.RELEASE</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/aopalliance/aopalliance -->
+    <dependency>
+      <groupId>aopalliance</groupId>
+      <artifactId>aopalliance</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjweaver -->
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjweaver</artifactId>
+      <version>1.8.10</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>5.1.6</version>
+    </dependency>
+
+
+    <!-- https://mvnrepository.com/artifact/org.springframework/spring-test -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <version>4.3.9.RELEASE</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>

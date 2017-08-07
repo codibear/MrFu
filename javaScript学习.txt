@@ -1,4 +1,35 @@
 
+
+为组件赋值
+document.getElementById("time").value = 你的值;
+
+
+1.点击按钮的事件
+
+	<input class="btn" id="btnD" .....
+	<input class="btn" id="btnE" .....
+	用JQuery去监听,当class为btn的按钮被点击时
+	$(".btn").click(function(){
+		// 下面这行代码就是你要的ID属性
+		$(this).attr("id");
+	});
+	如果按钮也是动态生成的,要通过live去绑定事件,写法如下
+	$(".btn").live("click",function(){
+		// 下面这行代码就是你要的ID属性
+		$(this).attr("id");
+	});
+
+
+===================================================
+
+
+js 积累
+	判断是否block  $("#123:visable")
+			$("#123".css.("display")=="block")
+
+
+
+==============================================
 弱类型语言 所以不需要指明类型
 1.冲突符号的对策
 	var god = "it'\s true0";

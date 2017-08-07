@@ -1,3 +1,16 @@
+
+
+====================================================================================
+fastjson 防止再去找外键
+
+@JSONField(serialize = false)
+    private transient Dept dept;
+
+类型转换：
+list  ->  object  -->   long  --> int
+
+new ReentrantLock();//通过JDK5中的锁来保证线程的访问的互斥
+
 Date：
 	1.服务器的传输，用的是sql.Date，除此之外所有的Date用的都是utils中的
 	2.两者之间的转换
@@ -18,3 +31,161 @@ Json:
 			alter("hello a");
 		}
 	};
+=====================================================================================
+
+			Ajax的基本应用
+			
+	 <script type="text/javascript">
+        $(function () {
+           $.get("deptlist.action",function (data) {
+               var tr = "<tr>";
+               $(data).each(function (i,obj) {
+                   alert(obj.deptName) ;
+                   var td = "<td>"+obj.deptName+"</td>"+
+                       "<td>"+obj.loc+"</td>";
+                   tr = tr+td+"</tr>";
+
+               });
+               $(table).append(tr)
+           })
+        });
+	
+====================================================================================
+Thread:
+	join总结：api  等到死 当一个线程调用它是，主线程就会等到这个线程执行完成为止，如果执行失败，主线程也会报异常
+	
+		/*
+			join:
+			当A线程执行到了B线程的.join()方法时，A就会等待。等B线程都执行完，A才会执行。
+
+			join可以用来临时加入线程执行。
+
+			1.线程使用join方法，主线程就停下，等它执行完，那么如果该线程冻结了，主线程就挂了，这也是为什么线程要抛异常的原因
+			2.当两个或以上线程开启了，这个A线程才使用join方法，那么主线程还是停下，这几个个线程交替进行，直到A执行完，主线程才复活
+
+
+			*/	 
+
+			/*
+			1.tostring（），方法，获取线程具体的名字，优先级
+			2.优先级代表抢资源的频率
+			3.java中设置有1  -  5   -  10这三个级别，因为是固定值，所以用字母大写表示
+			4.跟设置后台线程一样，都属于线程的函数，由线程对象直接调用           r.setPriority(Thread.字母级别)                                     
+			5.匿名内部类？是多线程的关键，必须掌握
+			*/
+
+
+	运行3个线程分别输出 1 2  3
+		测试一：失败 	直接开启3个线程  
+		测试二：失败	调用wait方法
+		测试三：失败	调用sleep方法（1 2 3）----  可能是分配的秒数太少
+		测试三：成功	为每个线程分配权限setPriority
+		
+			class Thead3 implements Runnable{
+			 Thread thread = new Thread(new Thead1());
+			 thread.setPriority(1);
+			 
+		测试四：成功	调用join方法
+		
+		  thread.start();
+        try {
+            thread.join();
+            thread2.start();
+            thread2.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }thread3.start();
+=========================================================================================	
+IOStream:
+
+读写：
+
+
+public static void main(String[] args){
+
+try{
+
+File inFile = new File("_________");
+
+File outFile = new File("_________");
+
+FileInputStream fis = new FileInputStream(_________);
+
+FileOutputStream fos = new FileOutputStream(_________);
+
+int c;
+
+while((c = fis.read())!=-1){
+
+fos.write(c);
+
+}
+
+_____.close();
+
+_____.close();
+
+}catch(FileNotFoundException e){
+
+System.out.println("FileStreamsTest:"+e);
+
+}catch(IOException e){
+
+System.out.println("FileStreamTest"+e);
+
+}
+
+}
+
+}
+
+
+
+//抽象类   需要具体类多态 都是二进制的
+            OutputStream os = new FileOutputStream(new File("D://file.txt"));
+            os.write(6);       //ACK
+
+
+            FileWriter fw
+			
+            //这里就是直接写字符
+            fw = new FileWriter(new File("D://test.txt"));
+            fw.write("sdfsfsdfsdfdsgkjdf;lsgjds;fgjsgfdkl;sjgd;fg");
+            fw.append("\nwoshi ni bab ");
+            fw.flush();
+            fw.close();
+
+
+           /* User user = new User(1,"zzx","123456");
+            OutputStream obj = new ObjectOutputStream(fw);
+            os.write(6);
+
+            public static void writeobj()throws Exception
+            {
+                ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("a.txt"));
+                oos.writeObject(new person3("lisi",20));
+                oos.close();
+            }
+            public static void readobj()throws Exception
+            {
+                ObjectInputStream ois = new ObjectInputStream(new FileInputStream("a.txt"));
+                person3 p = (person3)ois.readObject();
+                System.out.println(p);
+                ois.close();
+            }*/
+
+
+			==================================================
+							RandomAccessFile
+			
+			try {
+            FileWriter fw = new FileWriter(new File("D://randaccess.txt"));
+            RandomAccessFile raf = new RandomAccessFile(new File("D://test.txt"),"rw");
+            System.out.println(raf.length());
+            raf.seek(raf.length()/3);
+            int c;
+            while ((c=raf.read())!=-1){
+                fw.write(c);
+            }
+            fw.close();
+

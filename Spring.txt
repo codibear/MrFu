@@ -15,7 +15,8 @@
      *
      *    在基础层面，最为重要的对象，就是BeanFactory，可以通过此接口实现IOC（ Inversion of Control）即DI(Dependency Injection)。
      *
-     *    在Spring如果想设置多实例，可以通过scope设置，sigleton|prototype
+     *    在Spring如果想设置多实例，可以通过scope设置，sigleton|prototype   
+	 *	  在spring和struts整合的过程中，因为struts是多实例spring是单实例所以必须在action中设置 prototype
      *
      *    程序的运行主要依靠于对象中的方法！！！
      *
@@ -33,3 +34,290 @@
      *                  功能:打印
      *
      */
+	 
+	 
+	 Spring核心知识：AOP面向切面   IOC控制反转
+		注意：在package有一个json-default，这样就可以传输json格式的数据了
+		1.进行依赖的加载
+		2.对Spring头文件进行重新加载
+		
+		
+		--------------------------------------------------------------
+		3.实体类的配置（利用Annotation）
+		
+		@Entity	声明实体类
+		
+		@Id
+		@GeneratedValue(strategy = GenerationType.|设置主键的增加模式|)
+		//上面的老师是放在get方法上的
+		
+		
+		@Column(name="", length= , nullable =)	声明属性
+		@Temporal(TemporalType.|数据类型如Date|)
+		
+		
+		4.创建库的声明(Dao层)
+		@Repository  -- 类前声明
+		
+		5.声明事务(Biz层)
+		@Service
+		@Transactional		----	类前声明
+		
+		@Transactional(Transactional.TxType.REQUIRED)	方法前声明
+		
+		
+		
+		
+		6.Action层的json数据传递
+		
+		 HttpServletResponse response = ServletActionContext.getResponse();
+        PrintWriter out = response.getWriter() ;
+
+        //通过service调用，返回对应的数据
+        //将数据使用fastjson进行格式化。
+
+        //out.print(jsonStr);
+        return NONE ;
+		
+		
+		7.测试类的配置
+			@RunWith(SpringJUnit4ClassRunner.class)  相当于@Test
+			@ContextConfiguration("classpath:applictionContext.xml")
+				自动到xml文件中查找相关的资源配置   上面两句卸载类的前面
+				
+			@Resource	加载路径中的相关资源	资源字段上面
+			private DeptBiz deptBiz;
+			
+			@Test
+		
+		
+		
+		--------------------------------------------------------------
+		
+		2.面向切面的配置
+			<aop:
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+		applicationContext.xml头文件
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+    	 http://www.springframework.org/schema/beans/spring-beans.xsd
+     	 http://www.springframework.org/schema/context
+         http://www.springframework.org/schema/context/spring-context.xsd
+         http://www.springframework.org/schema/aop
+         http://www.springframework.org/schema/aop/spring-aop.xsd
+         http://www.springframework.org/schema/tx
+     	 http://www.springframework.org/schema/tx/spring-tx.xsd">
+		 
+		 
+		 
+		 <!--方式一：Spring + Hibernate整合-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver" />
+        <property name="jdbcUrl" value="jdbc:mysql:///test" />
+        <property name="user" value="root" />
+        <property name="password" value="root" />
+        <property name="initialPoolSize" value="3" />
+        <property name="maxPoolSize" value="10" />
+        <property name="maxStatements" value="100" />
+        <property name="acquireIncrement" value="2" />
+    </bean>
+
+
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"></property>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+                <prop key="hibernate.show_sql">true</prop>
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+            </props>
+        </property>
+
+        <!--扫描映射包:自动加载映射文件-->
+        <property name="mappingDirectoryLocations">
+            <list>
+                <value>classpath:com/chinasofti/oa/domain/</value>
+            </list>
+        </property>
+    </bean>
+
+
+    <!--配置事务管理-->
+    <bean id="txManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <tx:method name="*" read-only="false"/>
+            <tx:method name="get*" read-only="true" />
+            <tx:method name="find*" read-only="true" />
+        </tx:attributes>
+    </tx:advice>
+    <aop:config>
+        <aop:pointcut expression="execution(* com.chinasofti.oa.biz.impl.*.*(..))" id="point"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="point"/>
+    </aop:config>
+
+
+    <bean id="deptDao" class="com.chinasofti.oa.dao.impl.DeptDaoImpl">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+
+    <bean id="deptBiz" class="com.chinasofti.oa.biz.impl.DeptBizImpl">
+        <property name="deptDao" ref="deptDao" />
+    </bean>
+		
+</beans>			
+=====================================================
+Spring 的依赖包
+
+=====================================================
+spring-context	基本spring
+spring-tx	事务
+spring-orm	
+aopalliance	切面用的
+aspectjweaver	也是用来切面的
+hibernate-core
+c3p0
+spring-test	spring的junit
+junit
+mysql
+fastjson
+poi	用来报表
+struts2-core
+struts2-spring-plugin  struts-spring整合
+struts2-json-plugin		struts提供的json
+servlet
+
+
+
+<dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <version>4.3.8.RELEASE</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.springframework/spring-tx -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-tx</artifactId>
+      <version>4.3.8.RELEASE</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.springframework/spring-orm -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-orm</artifactId>
+      <version>4.3.8.RELEASE</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/aopalliance/aopalliance -->
+    <dependency>
+      <groupId>aopalliance</groupId>
+      <artifactId>aopalliance</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjweaver -->
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjweaver</artifactId>
+      <version>1.8.10</version>
+    </dependency>
+
+
+    <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>5.2.10.Final</version>
+    </dependency>
+
+
+    <!-- https://mvnrepository.com/artifact/com.mchange/c3p0 -->
+    <dependency>
+      <groupId>com.mchange</groupId>
+      <artifactId>c3p0</artifactId>
+      <version>0.9.5.2</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.springframework/spring-test -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <version>4.3.8.RELEASE</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>5.1.6</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.alibaba</groupId>
+      <artifactId>fastjson</artifactId>
+      <version>1.1.22</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi</artifactId>
+      <version>3.15</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.struts/struts2-core -->
+    <dependency>
+      <groupId>org.apache.struts</groupId>
+      <artifactId>struts2-core</artifactId>
+      <version>2.5.12</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.struts/struts2-spring-plugin -->
+    <dependency>
+      <groupId>org.apache.struts</groupId>
+      <artifactId>struts2-spring-plugin</artifactId>
+      <version>2.5.12</version>
+    </dependency>
+
+
+    <!-- https://mvnrepository.com/artifact/org.apache.struts/struts2-json-plugin -->
+    <dependency>
+      <groupId>org.apache.struts</groupId>
+      <artifactId>struts2-json-plugin</artifactId>
+      <version>2.5.12</version>
+    </dependency>
+
+
+    <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+      <scope>provided</scope>
+    </dependency>
