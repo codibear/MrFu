@@ -290,4 +290,61 @@ public class Stack<E> {
     }
 }
 
+-------------------------------
+		栈的应用  --  回文
+难点：奇数偶数的判断以及中点的判断
+
+思想：
+
+	把数据放到字符串数组中，求出字符串的中点
+	b把中点以及之前的字符串放到栈中
+	判断中点是奇数还是偶数，因为要获取一般数据，不同的数后面读取的数是不一样的
+	
+public class Plalindrome {
+    public static void main(String[] args) {
+        System.out.println("请输入内容！");
+        Scanner scanner = new Scanner(System.in);
+        String str = scanner.next();
+        //内容的初始化，把所输入的字符串放到字符数组中
+        char [] datas = str.toCharArray();
+
+
+        //初始化栈容器
+        char [] stack = new char[datas.length/2];
+        int flag = datas.length;
+        //取字符串的中间位置
+        int mid = flag/2;
+        //栈的指针
+        int top = 0;
+
+        //把一半的值赋给栈内:前半部分
+        for(int i=0;i<=mid-1;i++){
+            stack[top++] = datas[i];
+        }
+
+        //判断字符数组的奇数偶数
+        if(datas.length%2==0){
+            for(int i = mid;i<flag;i++){
+                if(stack[--top]!=datas[i]){
+                    System.out.println("不是回文");
+                    break;
+                }else {
+                    System.out.println("回文！");
+                }
+            }
+        }else {
+            for(int i = mid +1;i<flag;i++){
+                if(stack[--top]!=datas[i]){
+                    System.out.println("不是回文");
+                    break;
+                }else {
+                    System.out.println("回文！");
+                }
+            }
+
+        }
+
+    }
+}
+	
 ======================================================================
