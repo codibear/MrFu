@@ -1,5 +1,99 @@
 				专题一：分页
 =========================================================
+
+			js代码
+			
+$(function () {
+            $("#uppage").click(function () {
+                $.get("deptpageChange.action?pageBean.previewPageNO");
+            });
+            $("#downpage").click(function () {
+                $.get("deptpageChange.action?pageBean.nextPageNo");
+            });
+
+        });
+
+
+        $(function () {
+            $.get("deptlist.action",function (data) {
+                var tr = "<tr>";
+                $(data).each(function (i,obj) {
+                    var td = "<td>"+obj.deptNO+"</td>"+
+                        "<td>"+obj.deptName+"</td>"+
+                        "<td>"+obj.loc+"</td>"+
+                        "<td>"+"<input type='button' value='sc'  onclick='c(this)'/> </td>"+
+                        "<td>"+"<input type='button' value='update'  onclick='show(this)'/> </td>";
+                    tr = tr+td+"</tr>";
+                });
+                $("#tableone").append(tr);
+            });
+
+
+
+            $.get("deptpageNext.action",function (data) {
+                /*alert(data.totalPageNo)*/
+                var totalPageNo = data.totalPageNo;
+                var totalRecords = data.totalRecords;
+                /*alert(totalRecords);*/
+                $("#totalPageNo").html(totalPageNo);
+                $("#totalRecords").html(totalRecords);
+                $("#currentPageNo").html(data.currentPageNo);
+                var tr = "<tr>";
+                $(data.datas).each(function (i,obj) {
+                    var td = "<td>"+obj.deptNO+"</td>"+
+                        "<td>"+obj.deptName+"</td>"+
+                        "<td>"+obj.loc+"</td>";
+                    tr = tr+td+"</tr>";
+                });
+                $("#tabletwo").append(tr);
+            });
+        });
+
+        /*为什么调用jquery的时候他不出*/
+
+        function c(c) {
+            var id = $(c).parents("tr").find("td:eq(0)").text();
+            $.get("deptdel.action",{deptNO:id},function (data) {
+                $(c).parent().parent().remove();
+            });
+        };
+
+
+        function show(c) {
+            var id = $(c).parents("tr").find("td:eq(0)").text();
+            var name = $(c).parents("tr").find("td:eq(1)").text();
+            var loc = $(c).parents("tr").find("td:eq(2)").text();
+            document.getElementById("deptNO").value=id;
+            document.getElementById("deptName").value=name;
+            document.getElementById("loc").value=loc;
+
+           /* $.get("deptload.action",{deptNo:id},function (data) {
+                alert(data);
+            });*/
+
+            document.getElementById("divhide").style.display="block";
+        }
+
+        $(function () {
+            $("#su").click(function () {
+                $.get("deptre.action" ,$("#formo").serialize(),function (data) {
+                });
+            });
+        });
+
+        function backpage() {
+           $("input[type=submit]").style.display="none";
+        }
+
+        /*$(function () {
+            $("button:sumbit",this).click(function () {
+                alert("jinru")
+                $.get("deptdel.action");
+            });
+        });*/
+
+
+-------------------------------------------------------
 public class PageBean<T> implements Serializable{
     private int currentPageNo = 1;
     private int pageSize;
@@ -178,6 +272,7 @@ public String pageNext() throws IOException {
     }
 	
 ------------------------------
+
 		前端的调用
  $.get("deptpageNext.action",function (data) {
                 alert(data.totalPageNo)

@@ -1,0 +1,222 @@
+滚筒排序法
+----------------------
+		冒泡排序法
+		
+public class Popsort {
+
+    public static void pop(){
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("您要输入几个数？");
+        int num = scanner.nextInt();
+        int a [] = new int [num];
+        for(int i =0;i<a.length;i++){
+            System.out.println("总共可以输入"+num+"个，当前为第"+(i+1)+"个。");
+            a [i]=scanner.nextInt();
+        }
+        for(int i=0;i<a.length;i++){
+            System.out.print(a[i]+",");
+        }
+        System.out.println("降序：");
+        // -》 最多的一个比较了 n-1此（n为一共多少个数据）
+        //  每一个比较了 n-i次 i为数字的位置
+        //    1 2 3 4 5 
+        // -> 2 1 3 4 5 
+        // -> 2 3 1 4 5 
+        // -> 2 3 4 1 5 
+        // -> 2 3 4 5 1
+        //最多走了几趟
+        for(int i = 0;i<a.length-1;i++){
+            //每一个数走了多少
+            for (int j=0;j<a.length-1-i;j++){
+                if(a[j]<a[j+1]){
+                    int tem = a[j];
+                    a[j]=a[j+1];
+                    a[j+1]=tem;
+                }
+            }
+        }
+        for(int i=0;i<a.length;i++){
+            System.out.print(a[i]+",");
+        }
+
+    }
+    public static void main(String[] args) {
+        pop();
+    }
+}
+----------------------
+		快速排序法
+		
+思想：
+		6 4 7 8 3 5 2
+-	左边第一个书为基本数用来比较
+-	两边都去和基本数据比较一起走
+	一直走到左边的数比基本数据大，右边的数比基本数据小，然后交换（如果没有就进行下一轮比较），并且基本数据交换到中间，这样左边就是比基本数据小的数字，右边比基本数据大
+	
+	
+public class Quicksort {
+    public static int[] quick(){
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("您要输入几个数？");
+        int num = scanner.nextInt();
+        int a [] = new int [num];
+        for(int i =0;i<a.length;i++){
+            System.out.println("总共可以输入"+num+"个，当前为第"+(i+1)+"个。");
+            a [i]=scanner.nextInt();
+        }
+        for(int i=0;i<a.length;i++){
+            System.out.print(a[i]+",");
+        }
+        System.out.println("降序：");
+
+        for(int i=0;i<a.length;i++){
+            System.out.print(a[i]+",");
+        }
+        return a;
+    }
+
+    public static int[] quickSort(int a[],int letf,int right){
+        //递归的出口
+        if(letf>right)
+            return null;
+
+        //基数的下标
+        int baseRight = right;
+        int baseLeft = letf;
+
+        int rightTag = right;
+        int leftTag = letf;
+
+        //数据
+        int baseValue = a[letf];
+
+        //只要下标不相等就往两边走
+        //     -》          《-
+        //      6 4 7 8 3 5 2
+        while(leftTag!=rightTag){
+
+            //必须先从右向左走，这样一定能过保证交换后左边小右边大
+            //保证左边下标小于右边的，从右向左找比基本数据小的数据下标
+            while(leftTag<rightTag&&a[rightTag]>baseValue)
+                rightTag--;
+            //保证左边下标小于右边的，从左向右找比基本数据大的数据下标
+            while(leftTag<rightTag&&a[leftTag]<baseValue)
+                leftTag++;
+
+
+
+            //当两者都找到了左边的大于基数，右边的小于基数的数字交换
+            if(leftTag<rightTag){
+                int temp = a[leftTag];
+                a[leftTag] = a[rightTag];
+                a[rightTag] = temp;
+            }
+
+
+        }
+        //当左边与右边碰面时
+        //改变基数  把基数与碰面的数字交换位置，让基数到中间
+
+
+        int temp = baseValue;
+        baseValue = a[leftTag];
+        a[leftTag] = baseValue;
+
+
+        quickSort(a,baseLeft,leftTag-1);
+        quickSort(a,rightTag+1,baseRight);
+        return a;
+    }
+
+    //8 9 5 4 6
+    public static void main(String[] args) {
+        int a [] = quick();
+        int b [] = quickSort(a,0,4);
+        System.out.println();
+        for(int i = 0;i<b.length;i++){
+            System.out.print(b[i]);
+        }
+    }
+}
+
+==========================================================
+			数据结构
+==========================================================
+			顺序队列
+public class OrderQueue<E> {
+    //
+    private Object [] object;
+    private int maxSize;
+    private int tail = 0;
+    private int head = 0;
+    public OrderQueue(){
+
+    }
+    //数组分配的时候多分配了一个，这样就不会由于尾部出去而产生越界问题了
+    public OrderQueue(int init){
+        if(init>0){
+            this.maxSize = init;
+            object = new Object[maxSize];
+            tail=head=0;
+        }else {
+            throw new RuntimeException("initial size should bigger than zero!");
+        }
+    }
+    public boolean isEmpty(){
+        return head==tail?true:false;
+    }
+    //插入
+    public void add(E e){
+        if(tail<maxSize){
+            object[tail++]=e;
+        }else {
+            System.out.println("已经满啦！");
+        }
+    }
+    //返回队首   干什么用？
+    public E peek(){
+        if(isEmpty()){
+            throw new RuntimeException("is null");
+        }else {
+            return (E)object[head];
+        }
+    }
+    //出队只是每次调用出去一个值  我感觉可以头++ 也可以尾--
+    public E poll(){
+        if(isEmpty()){
+            throw new RuntimeException("is null");
+        }else {
+            E value = (E)object[head];
+            object[head++] = null;
+            return value;
+        }
+    }
+    //长度
+    public int length(){
+        return tail-head;
+    }
+
+    @Override
+    public String toString() {
+        return "OrderQueue{" +
+                "object=" + Arrays.toString(object) +
+                ", maxSize=" + maxSize +
+                ", tail=" + tail +
+                ", head=" + head +
+                '}';
+    }
+
+    public static void main(String[] args) {
+        OrderQueue orderQueue = new OrderQueue<String>(3);
+        orderQueue.add("zzx");
+        orderQueue.add("sdf");
+        orderQueue.add("qwe");
+        System.out.println(orderQueue);
+        System.out.println("长度："+orderQueue.length());
+        System.out.println("站头"+orderQueue.peek());
+        System.out.println("拿出后："+orderQueue.poll());
+        System.out.println(orderQueue);
+        System.out.println("长度："+orderQueue.length());
+    }
+
+}
