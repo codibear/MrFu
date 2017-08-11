@@ -1,5 +1,22 @@
 
 
+		事件直接调用函数
+document.getElementById("save").onclick = function () {
+            alert(date);
+        }
+
+下拉选矿获得值
+var obj = document.getElementByIdx_x(”testSelect”); //定位id
+var index = obj.selectedIndex; // 选中索引
+var text = obj.options[index].text; // 选中文本
+var value = obj.options[index].value; // 选中值
+
+$( "#myselect option:selected" ).text();
+
+
+也可以在onchange方法中：
+	 onchange="show_sub(this.options[this.options.selectedIndex].value)
+
 为组件赋值
 document.getElementById("time").value = 你的值;
 
@@ -146,3 +163,18 @@ nodeValue 用于改变一个文本节点的值
 js方法：
 $("#baidu").removeAttr("href");
 如此即可是a标签失效。
+
+
+jQuery中获得选中select值
+
+第一种方式
+$('#testSelect option:selected').text();//选中的文本
+
+$('#testSelect option:selected') .val();//选中的值
+
+$("#testSelect ").get(0).selectedIndex;//索引
+第二种方式
+$("#tesetSelect").find("option:selected").text();//选中的文本
+…….val();
+…….get(0).selectedIndex;
+

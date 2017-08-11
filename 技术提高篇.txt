@@ -1,3 +1,49 @@
+
+=======================================================
+alibaba 返序列化  
+	解决表中有外键关系的递归问题
+	@JSONField(serialize = false)
+    private transient Dept dept;
+=================
+				动态多条件查询
+List<String> list=new ArrayList();
+
+    String sql = "from SalesManage where 1=1";
+
+    if (cusName!=""){
+
+        sql+=" and cusName="+"?";
+
+        list.add(cusName);
+
+    }if (outLine!=""){
+
+        sql+=" and linkName=?" ;
+
+        list.add(outLine);
+
+    }if(linkName!=""){
+
+        sql+=" and outLine=?" ;
+
+        list.add(linkName);
+    }
+
+    for (String  a:list) {
+
+        System.out.println(a);
+
+        String[] p = {a};
+
+        System.out.println(sql);
+
+        List<SalesManage> salesManages = salesBiz.find(sql, p);
+
+        System.out.println(salesManages);
+    }		
+
+==================================================	
+
 				专题一：分页
 =========================================================
 

@@ -1,4 +1,130 @@
 
+====================================================
+			|	小技巧	|
+====================================================
+intellj 删除没用的包 ctrl+alt+o；
+intellj 删除没用的包 ctrl+alt+o；
+
+sql语句用大写  --  能增加执行的性能
+get	set方法前面加上final能够提升速度
+
+=====================================================
+			动态参数
+			
+	protected void update(String sql,Object ... params) throws SQLException {
+        Connection connection = DataSource.getConnection() ;
+
+        PreparedStatement ps = connection.prepareStatement(sql) ;
+
+        for(int i = 0 ; i < params.length ; i++) {
+            ps.setObject(i+1,params[i]);
+        }
+
+        ps.executeUpdate() ;
+
+        DataSource.close(connection);
+    }
+
+}
+
+=====================================================
+				拦截器
+				
+	　Java代码
+　　<%@ page language="java" contentType="text/html; charset=GBK"%>
+　　 prefix="s" uri="/struts-tags"%>
+　　
+　　return login
+　　
+　　
+　　（qurey.jsp）
+　　Java代码
+　　<%@ page language="java" contentType="text/html; charset=GBK"%>
+　　<%@taglib prefix="s" uri="/struts-tags"%>
+　　
+　　return login
+　　
+　　
+　　<
+　　二、Action部分（LoginAction.java）
+　　Java代码
+public class LoginAction extends ActionSupport {
+　　private static final long serialVersionUID = 1030294046920869257L;
+　　private String username;
+　　private String password;
+　　// 处理用户请求的execute方法
+　　public String execute() throws Exception {
+	　　if (isInvalid(getUsername()))
+	　　	return INPUT;
+	　　if (isInvalid(getPassword()))
+	　　	return INPUT;
+	　　if ((getUsername().equals("mm") || getUsername().equals("aumy"))
+	　　&& getPassword().equals("111")) {
+		　　// **ActionContext对象访问Web应用的Session
+		　　ActionContext.getContext().getSession().put("user", getUsername());
+		　　ActionContext.getContext().getSession().put("pass", getPassword());
+		　　System.out.println(getUsername() + "----" + getPassword());
+		　　return SUCCESS;
+	　　} else {
+	　　System.out.println(getUsername() + "----" + getPassword());
+	　　	return ERROR;
+	　　}
+　　}
+　　private boolean isInvalid(String value) {
+　　	return (value == null || value.length() == 0);
+　　}
+　　public String add() {
+　　	return SUCCESS;
+　　}
+　　public String show() {
+　　	return SUCCESS;
+　　}
+　　public String qurey() {
+　　	return SUCCESS;
+　　}
+　　public String getUsername() {
+　　	return username;
+　　}
+　　public void setUsername(String username) {
+　　	this.username = username;
+　　}
+　　public String getPassword() {
+　　	return password;
+　　}
+　　public void setPassword(String password) {
+　　	this.password = password;
+　　}
+}
+　　三、拦截器部分（AuthorityInterceptor.java）
+public class CheckLoginInterceptor extends AbstractInterceptor {
+    public static final String LOGIN_KEY = "LOGIN";
+    public static final String LOGIN_PAGE = "global.login";
+ 
+    public String intercept(ActionInvocation actionInvocation) throws Exception {
+ 
+        System.out.println("begin check login interceptor!");
+        // 对LoginAction不做该项拦截
+        Object action = actionInvocation.getAction();
+        if (action instanceof LoginAction) {
+            System.out.println("exit check login, because this is login action.");
+            return actionInvocation.invoke();
+        }
+ 
+        // 确认Session中是否存在LOGIN
+        Map session = actionInvocation.getInvocationContext().getSession();
+        String login = (String) session.get(LOGIN_KEY);
+        if (login != null && login.length() > 0) {
+            // 存在的情况下进行后续操作。
+            System.out.println("already login!");
+            return actionInvocation.invoke();
+        } else {
+            // 否则终止后续操作，返回LOGIN
+            System.out.println("no login, forward login page!");
+            return LOGIN_PAGE;
+        }
+    }
+}
+
 
 ====================================================================================
 fastjson 防止再去找外键

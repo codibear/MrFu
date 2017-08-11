@@ -83,11 +83,50 @@ function test(){
 }两次都是undefine;
 
 
-		回调函数
+		回调函数(未理解)
 function one(){return 1;}
 function two(){return 2;}
 function c(one,two){return one()+two();}
 c(one,two)
+
+		自调函数（自行调用）
+		
+{
+	function(){
+		alert("boo");
+	}
+}('*')  *存放所传递的参数
+
+
+		内部(私有)函数
+var a = function a(a){
+	var b =function b(b){
+	return b*2;
+	}
+	return b(a);
+}-----可以这么调用a(2);  b函数外部不可见
+
+		返回函数的函数
+function a(){
+	 alert("a"); 
+	 return function b()
+	 {alert("b");};
+}
+如果直接调用a()只会弹出a
+a()()两个alert都会弹出。  var av=a();弹出a  av();弹出b
+
+		能重写自己的函数（p80）不懂
+		
+function a(){	
+	alert("a");	
+	a=function(){
+		alert("b");
+	};
+}
+		
+
+
+
 
 ===================================================
 
@@ -192,5 +231,19 @@ instanceof :  ==判断是否类型并返回true或者false;
 ================================================================
 
 			内建对象
-			
+数据封装类对象	Object 	Array	Boolean	Number	String	
+工具类对象	Math	Date	RegExp
+错误对象
+
+			Object
+var o = new Object()
+o.toString()  『Object Object』
+o.valueOf() === o 返回的是自己的对象;
+
+			Array
+var a new Array()   ===  var a=[]
+赋值方式
+	1. a[0]  a[1]=
+	2. new Array(1,2,"")	
+	如果给构造方法只穿一个值他会报错，认为是长度
 	
