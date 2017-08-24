@@ -1,3 +1,15 @@
+配置文件顺序(必须按照这个顺序去写，否则会报错)
+	properties
+	settings
+	typeAliases
+	typeHandlers
+	objectFactory
+	plugins
+	environments
+	databaseIdProvider
+	mappers
+
+
 基础篇：
 	mybatis的初步认识与应用
 	============================
@@ -171,4 +183,188 @@
 		}
 	
 提高篇：
+	mapper	别名（typeAliases）	动态sql片段		resultMap	foreach		
+
+	mapper:的4唯一
+	/**
+     * 1.生成的方法名称要与配置文件中的id一致
+     * 2.返回值类型与配置文件中的resultType一致
+     * 3.入参的参数要与ParameterType一致
+     * 4.当前的类名与映射文件中的namespace一致
+     */
+	 
+	1.把domain改为mapper(建一个mapper的包，这里注意的一点是当使用别名的package属性是必须在resource的下面也创建一个相应的mapper包，这样才能映射到[相当于两个文件在同一个文件夹下])
 	
+		public interface ProgramerMapper {
+			void save(Programer programer);
+		}
+		
+		mybatis-config.xml
+		<mapper namespace="com.zzx.mybatis.mapper.ProgramerMapper">
+	
+	
+		使用：
+		
+		SqlSessionFactoryUtils utils = SqlSessionFactoryUtils.getInstance();
+        SqlSessionFactory sessionFactory = utils.getSqlSessionFactory();
+        session= sessionFactory.openSession();
+		//这一步比较重要
+        mapper = session.getMapper(ProgramerMapper.class);
+		
+		//programer是一个对象
+		mapper.save(programer);
+		
+		附：SqlSessionFactoryUtils
+			
+			
+			package com.zzx.mybatis.util;
+
+			import org.apache.ibatis.io.Resources;
+			import org.apache.ibatis.session.SqlSessionFactory;
+			import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+
+			import java.io.IOException;
+			import java.io.InputStream;
+
+			/**
+			 * Created by codiibear on 2017/8/23.
+			 */
+			public class SqlSessionFactoryUtils {
+
+				private static SqlSessionFactory sessionFactory;
+
+				private static SqlSessionFactoryUtils utils;
+
+				private SqlSessionFactoryUtils(){}
+
+				public static SqlSessionFactoryUtils getInstance(){
+
+					if(utils==null){
+						String resource = "config-mybatis.xml";
+
+						InputStream reader = null;
+
+						try {
+							reader = Resources.getResourceAsStream(resource);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+
+						sessionFactory = new SqlSessionFactoryBuilder().build(reader);
+						utils = new SqlSessionFactoryUtils();
+					}
+					return utils;
+				}
+
+				public SqlSessionFactory getSqlSessionFactory(){
+					return sessionFactory;
+				}
+
+			}
+
+			
+	
+	
+	2.别名的应用(推荐使用package,应用package的时候别名默认为类名[第一个字母小写]但是用package好像会影响效率，因为他会把所有的东西都加载一边)
+	
+	
+		<typeAliases>
+			<!--<typeAlias type="com.zzx.mybatis.domain.Programer" alias="programer"/>-->
+			<!--应用package必须让xml文件和domain在同一个包中，并且名称一样-->
+			<package name="com.zzx.mybatis.domain"/>
+		</typeAliases>
+	
+	
+		 <mappers>
+			<!--<mapper resource="com/chinasofti/mybatis/domain/Dept.xml"/>-->
+			<!--配置的是包扫描形式-->
+			<package name="com.chinasofti.mybatis.mapper" />
+		</mappers>
+		
+		
+		
+	3.动态sql片段(减轻代码重复如:select * from XXX)
+		在配置文件中写入如下的信息
+	
+		<sql id="selectProgramer" >
+			SELECT * FROM programer
+		</sql>
+		
+		在insert|select|update|delete中用
+		<select id="findAll"  resultType="programer">
+			<include refid="selectProgramer"/>
+		</select>
+		
+		
+	4.foreach标签 (IN 查询下)
+		/*
+		这里指的是 (collection不同而已)
+			parameteType和collection
+			list			array
+			list			list
+			
+		如果类型是集合类型，那么collection的位置，必须为list！
+		如果类型是数组类型，那么collection的位置就必须配置为array!
+		*/
+		SELECT * FROM programer WHERE gander IN ('男','女')
+	
+	
+		<select id="findByGander" resultType="programer" parameterType="java.util.List">
+		  <include refid="selectProgramer"/>
+			WHERE
+			  gander
+			IN
+			<foreach collection="list" open="("  separator="," close=")" item="mingzi">
+				#{mingzi}
+			</foreach>
+		</select>
+			
+			
+		interface中:
+		
+			List<Programer> findByGander(List<String> names);
+			
+			1)
+				String [] str = {"男","女"};
+			2)
+				List<String> list = new ArrayList();
+				list.add("男");
+				list.add("女");
+				
+	5.if标签(用于多条件动态查询)
+	注意:
+		1.if标签中的and必须是小写
+		2.and必须写在字段的前面
+	
+	SELECT * FROM programer WHERE gander=XXX AND pName=XXX
+	如果需要拼接的时候，可以使用where，会自动的生成where关键字，会自动去除掉第一个and
+		
+		
+		<select id="findByGanderAndSal" resultType="programer" parameterType="programer">
+			<include refid="selectProgramer"/>
+			<where>
+				<if test="gander!=null and gander!=''">
+					gander = #{gander}
+				</if>
+				<if test="sal!=null and sal!=''">
+				   AND sal = #{sal}
+				</if>
+			</where>
+		</select>
+		
+		mapper	interface:
+		 List<Programer> findByGanderAndSal(Programer programer);
+		 
+		 method:
+		 public void testFindByGanderAndSal(){
+			SqlSession sqlSession = SqlSessionFactoryUtils.getInstance().getSqlSessionFactory().openSession();
+			ProgramerMapper mapper = sqlSession.getMapper(ProgramerMapper.class);
+			Programer programer = new Programer();
+			programer.setGander("男");
+			programer.setSal(12000);
+			List<Programer> programers =  mapper.findByGanderAndSal(programer);
+			System.out.println(programers);
+		}
+			
+		
+高级篇：多表的查询应用(resultMap的应用)
