@@ -1,0 +1,174 @@
+基础篇：
+	mybatis的初步认识与应用
+	============================
+	1.导入maven依赖包
+		<dependency>
+            <groupId>org.mybatis.generator</groupId>
+            <artifactId>mybatis-generator-maven-plugin</artifactId>
+            <version>1.3.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.mybatis/mybatis -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.4.1</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.38</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+        </dependency>
+	
+	============================
+	2.编写核心配置文件 (注意这里面的内容是由严格的顺序的)
+	
+		mybatis-config.xml
+		
+		-----------------------------------------------------
+		<?xml version="1.0" encoding="UTF-8" ?>
+		<!DOCTYPE configuration
+		PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-config.dtd">
+		
+		
+		<configuration>
+			<!--导入properties文件-->
+			<properties resource="config.properties"/>
+			<typeAliases>
+				<!--应用package必须让xml文件和domain在同一个包中，并且名称一样-->
+				<package name="com.zzx.mybatis.domain"/>
+			</typeAliases>
+			
+			<!--每一个environment就代表一个数据链接源,需要多个数据链接元，就配置多个environment-->
+			<!--如果使用了spring,那么以下的配置将全部作废！-->
+			
+			<environments default="development">
+				<environment id="development">
+				
+					 <!--事务管理，使用的是JDBC的事务管理方式
+						MANAGED:由容器进行控制-->
+						
+					<transactionManager type="JDBC"/>
+					
+					 <!--数据源
+						使用MyBatis内置数据连接池
+						UPPOOLED:不设置数据链接池
+						POOLED：设置数据连接池(开发时，通常使用这种形式)
+						JNDI:在使用EJB的时候，比较适用
+						-->
+					<dataSource type="POOLED">
+						<property name="driver" value="${driver}"/>
+						<property name="url" value="${url}"/>
+						<property name="username" value="${username}"/>
+						<property name="password" value="${password}"/>
+					</dataSource>
+				</environment>
+			</environments>
+			<mappers>
+				<mapper resource="com/zzx/mybatis/mapper/ProgramerMapper.xml"/>
+				<mapper resource="com/zzx/mybatis/domain/Dept.xml"/>
+				<!--应该可以优化-->
+				<!--<package name="com/zzx/mybatis/domain/"/>
+				<package name="com/zzx/mybatis/mapper/"/>-->
+
+			</mappers>
+		</configuration>
+		--------------------------------------------
+		config.properties
+		--------------------------------------------
+			driver=com.mysql.jdbc.Driver
+			url=jdbc:mysql://localhost:3306/test
+			username=root
+			password=root
+	====================================================
+	
+	3.创建实体类和相关的映射文件
+		1)一定要实现序列化
+		2)映射文件所在的包应该和实体类在同一个目录
+			(后期优化的时候用的mapper但是当使用别名的package属性的时候一定要在同一个包内)
+			java/com.zzx.mybatis.domain
+			resource/com/zzx/mybatis/domain
+	---------------------------------------------------------		
+	<?xml version="1.0" encoding="UTF-8" ?>
+	<!DOCTYPE mapper
+			PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+			"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+			
+			 <!--
+				#{}:属于是jdbc中的占位符，相当于'?'
+				${}:字符串拼接 ,所能放置的拼接内容：value！
+			-->
+			
+			<!--
+				insert:代表插入
+				id:代表操作名称
+				parameterType:代表参数的类型
+				resultType:返回值类型
+			-->
+			
+			<!--
+				1.配置命名空间，可以区别于不同的映射文件
+				2.在进行Mapper类映射时，与Mapper一致
+			-->
+			
+	<mapper namespace="dept">
+		<insert id="save" parameterType="com.zzx.mybatis.domain.Dept">
+		  INSERT INTO dept(dname,loc) VALUES (#{dname},#{loc})
+		</insert>
+		<select id="findByName" parameterType="String" resultType="com.zzx.mybatis.domain.Dept">
+			SELECT * FROM dept WHERE dname LIKE '%${value}%'
+		</select>
+		<!--返回值的类型并不是list而是DEPt-->
+    <select id="findAll" resultType="com.chinasofti.mybatis.domain.Dept">
+        select * from dept
+    </select>
+	</mapper>
+	-------------------------------------------
+	===========================================
+	
+	4.创建前期的基本初始化信息
+		String config = mybatis-config;
+		InputStream reader = Resources.getResourceAsStream(config);
+		SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder.build(reader);
+		session = sqlSessionFactory.openSession();
+		
+	5.基本上可以使用了
+		@org.junit.Test
+		public void insert(){
+			Dept dept = new Dept();
+			dept.setDname("zzx");
+			dept.setLoc("tans");
+			
+			//dept就是命名空间 save是声明的方法
+			
+			session.insert("dept.save",dept);
+			session.commit();
+			session.close();
+		}
+		
+		@Test
+		public void findName(){
+			List<Dept> depts =  session.selectList("dept.findByName","z");
+			for (Dept d: depts
+				 ) {
+				System.out.println(d.getDname());
+			}
+		}
+	
+提高篇：
+	

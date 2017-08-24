@@ -315,3 +315,21 @@ System.out.println("FileStreamTest"+e);
             }
             fw.close();
 
+
+==================================================== +
+				拦截器的基本使用					||
+==================================================== +
+public class LoginInterceptor extends MethodFilterInterceptor {
+    @Override
+    protected String doIntercept(ActionInvocation actionInvocation) throws Exception {
+        User user = (User) ServletActionContext.getRequest().getSession()
+                .getAttribute("loginUser");
+        if(user == null){
+            //未登录，跳转到登录页面
+            return "login";
+        }
+        return actionInvocation.invoke();// 放行
+    }
+}
+
+====================================================
