@@ -183,6 +183,8 @@
 		}
 	
 提高篇：
+	mapper中的实体类名最好和配置文件的xml相一致
+
 	mapper	别名（typeAliases）	动态sql片段		resultMap	foreach		
 
 	mapper:的4唯一
@@ -367,4 +369,52 @@
 		}
 			
 		
-高级篇：多表的查询应用(resultMap的应用)
+高级篇：多表的查询应用(resultMap的应用)单的里面有外键
+	1.	resultMap的第一种用法:
+		他能够给数据库的列其别名，这样在写sql语句的时候就不用非得和数据可的字段去匹配了。
+		
+		<resultMap id="userResultMap" type="User">
+		  <id property="id" column="user_id" />
+		  <result property="username" column="username"/>
+		  <result property="password" column="password"/>
+		</resultMap>
+	
+	2.	resultMap的第二种用法:(这里预设的是一个程序让一群程序员编写，一个程序员只能编写一个程序)
+	
+		多对一:
+		程序员 --- 程序  用里面的<association> property是实体类中的有关系的那个名字
+			程序员.xml
+		<mapper namespace="com.zzx.mybatis.mapper.ProgramerMapper">
+		<resultMap id="programerResultMap" type="programer">
+			<id property="pId" column="pId"/>
+			<result property="pName" column="pName"/>
+			<result property="gander" column="gander"/>
+			<result property="sal" column="sal" javaType="Double" jdbcType="DECIMAL"/>
+			<association property="project" javaType="project">
+				<id property="proId" column="proId"/>
+				<result property="pName" column="pName"/>
+				<result property="detail" column="detail"/>
+				<result property="createDate" column="createDate" javaType="java.util.Date" jdbcType="DATE"/>
+			</association>
+		</resultMap>
+			
+		
+		一对多:
+		程序 --- 程序员 用里面的<collection>
+		property是实体类中的有关系的那个名字
+			程序.xml
+		<resultMap id="projectResultMap" type="project">
+			<id property="proId" column="proId"/>
+			<result property="pName" column="pName"/>
+			<result property="detail" column="detail"/>
+			<result property="createDate" column="createDate" javaType="java.util.Date" jdbcType="DATE"/>
+			<collection property="programers" ofType="programer">
+				<id property="pId" column="pId"/>
+				<result property="gander" column="gander"/>
+				<result property="pName" column="pName"/>
+				<result property="sal" column="sal" javaType="Double" jdbcType="DECIMAL"/>
+			</collection>
+		</resultMap>
+		
+		
+		
